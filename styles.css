@@ -340,25 +340,17 @@
 	font-size: 13px;
 }
 
-/* ==================== Jump Flash ==================== */
+/* ==================== Jump Flash (跳转高亮) ==================== */
 
-/**
- * 跳转高亮 class
- *
- * 用 box-shadow inset 模拟背景（不会被 .cm-activeLine 的 background-color 覆盖）。
- * animation 1.5s 从黄色 fade-out 到透明，forwards 保持终态避免移除 class 前回跳。
- */
-.sfc-flash {
-	animation: sfc-flash 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-@keyframes sfc-flash {
+@keyframes sfc-jump-flash {
 	0% {
-		box-shadow: inset 0 0 0 100px rgba(255, 213, 79, 0.5),
-			0 0 0 1px rgba(255, 213, 79, 0.7);
+		box-shadow: inset 0 0 0 100px rgba(255, 213, 79, 0.5), 0 0 0 1px rgba(255, 213, 79, 0.7);
 	}
 	100% {
-		box-shadow: inset 0 0 0 100px transparent,
-			0 0 0 1px transparent;
+		box-shadow: inset 0 0 0 100px transparent, 0 0 0 1px transparent;
 	}
+}
+
+.sfc-jump-flash {
+	animation: sfc-jump-flash 1.5s ease-out;
 }

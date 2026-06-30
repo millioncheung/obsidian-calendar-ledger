@@ -4,19 +4,13 @@ import { MarkdownView, WorkspaceLeaf, type Plugin } from 'obsidian';
  * 跳转到 Calendar.md 指定行
  *
  * 统一切换到编辑模式，行为：
- *   1. 打开 Calendar.md
- *   2. 用 parser 的 lineStart 定位目标行
- *   3. editor.setCursor 到行末
- *   4. editor.scrollIntoView 居中
- *   5. setTimeout 300ms 后添加高亮 class（等滚动基本完成，不依赖 scroll end）
- *   6. 高亮持续 1500ms 后移除 class
- *
- * 不依赖 scroll animation end 事件。
- * 不在阅读模式 DOM 中查找日期文本。
- * 跳转和高亮都基于 editor lineStart。
+ *   - 光标置于行末（基于 lineStart）
+ *   - 600ms easeOutQuart 滚动动画（类似 Spring 减速感）
+ *   - 滚动开始 500ms 后添加高亮 class（不依赖 scroll end 事件）
+ *   - 高亮持续 1500ms 后移除
  *
  * @param line 0-based 行号（parser 的 lineStart）
- * @param hint 日期标题，domAtPos 失败时兜底匹配用
+ * @param hint 日期标题（如 "06-16 Tue"），用于兜底匹配行元素
  */
 export async function navigateToCalendarLine(
 	plugin: Plugin,
@@ -41,7 +35,7 @@ export async function navigateToCalendarLine(
 			}
 		}
 
-		// 2. 没有则新建 tab 打开（不传 eState 避免触发 Obsidian 原生跳转高亮）
+		// 2. 没有则新建 tab 打开（不传 eState，避免 Obsidian 原生跳转 flash）
 		if (!targetLeaf) {
 			targetLeaf = plugin.app.workspace.getLeaf('tab');
 			await targetLeaf.openFile(file, { active: true });
@@ -66,36 +60,91 @@ export async function navigateToCalendarLine(
 		const editor = await waitForEditor(view);
 		if (!editor) return;
 
-		// 6. 用 lineStart 定位目标行，setCursor 到行末
+		// 6. setCursor 到行末（基于 lineStart）
 		const targetLine = Math.min(line, editor.lastLine());
 		const lineContent = editor.getLine(targetLine);
 		const pos = { line: targetLine, ch: lineContent.length };
 		editor.setCursor(pos);
 		editor.focus();
 
-		// 7. scrollIntoView 居中
-		editor.scrollIntoView({ from: pos, to: pos }, true);
+		// 7. 等待 CM6 渲染（光标行装饰更新 + coordsAtPos 就绪）
+		await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-		// 8. 延迟 300ms 后添加高亮 class（等滚动基本完成，不依赖 scroll end 事件）
-		currentHighlightTimeout = window.setTimeout(() => {
-			currentHighlightTimeout = null;
-			const lineEl = findEditorLineEl(view, editor, targetLine, hint);
-			if (!lineEl) return;
+		const cm = (editor as any).cm;
+		const scroller = view.contentEl.querySelector<HTMLElement>('.cm-scroller');
 
-			lineEl.classList.add('sfc-flash');
-			currentHighlightEl = lineEl;
+		// 8. 计算目标 scrollTop 并滚动（600ms 动画，不 await，与高亮并行）
+		const targetTop = cm && scroller ? computeTargetTop(cm, scroller, targetLine) : null;
 
-			// 9. 高亮持续 1500ms 后移除 class
-			window.setTimeout(() => {
-				lineEl.classList.remove('sfc-flash');
-				if (currentHighlightEl === lineEl) {
-					currentHighlightEl = null;
-				}
-			}, 1500);
-		}, 300);
+		if (targetTop != null && scroller) {
+			smoothScrollTo(scroller, targetTop, 600);
+		} else {
+			// fallback：CM6 原生 scrollIntoView（瞬间，无动画，但确保目标行进入视口）
+			editor.scrollIntoView({ from: pos, to: pos }, true);
+		}
+
+		// 9. 500ms 后高亮（不依赖滚动完成，setTimeout 控制）
+		scheduleHighlight(view, editor, targetLine, hint);
 	} catch (e) {
 		console.error('[SFC] navigateToCalendarLine error:', e);
 	}
+}
+
+// ────────────────────────────────────────────────────────────────
+// 位置计算 + 滚动
+// ────────────────────────────────────────────────────────────────
+
+/**
+ * 用 CM6 coordsAtPos 计算让目标行居中的 scrollTop
+ *
+ * coordsAtPos 返回目标行首字符的屏幕坐标。即使目标行在视口外较远
+ * 位置未渲染，CM6 也能根据文档结构估算其坐标。
+ */
+function computeTargetTop(
+	cm: any,
+	scroller: HTMLElement,
+	line: number,
+): number | null {
+	try {
+		const lineObj = cm.state.doc.line(line + 1); // CM6 行号 1-based
+		const coords = cm.coordsAtPos(lineObj.from);
+		if (!coords) return null;
+
+		const scrollerRect = scroller.getBoundingClientRect();
+		const lineMidInScroller =
+			(coords.top + coords.bottom) / 2 - scrollerRect.top + scroller.scrollTop;
+		return lineMidInScroller - scrollerRect.height / 2;
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * rAF smooth 滚动（easeOutQuart 缓动，类似 Spring 减速感）
+ *
+ * 不返回 Promise —— 滚动与高亮并行，高亮由 setTimeout 500ms 控制。
+ * 用 scrollToken 取消连续点击时的旧动画循环，避免冲突。
+ */
+function smoothScrollTo(scroller: HTMLElement, targetTop: number, duration: number): void {
+	const startTop = scroller.scrollTop;
+	const distance = targetTop - startTop;
+	if (Math.abs(distance) < 2) return;
+
+	const myToken = ++scrollToken;
+	const startTime = performance.now();
+
+	const step = (now: number) => {
+		if (myToken !== scrollToken) return; // 被新滚动取消
+		const elapsed = now - startTime;
+		const t = Math.min(elapsed / duration, 1);
+		// easeOutQuart：起步快、末段慢，类似 Spring 收敛
+		const eased = 1 - Math.pow(1 - t, 4);
+		scroller.scrollTop = startTop + distance * eased;
+		if (t < 1) {
+			requestAnimationFrame(step);
+		}
+	};
+	requestAnimationFrame(step);
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -103,11 +152,11 @@ export async function navigateToCalendarLine(
 // ────────────────────────────────────────────────────────────────
 
 /**
- * 定位目标行的 .cm-line 元素（基于 lineStart，不查阅读模式 DOM）
+ * 定位目标行的 .cm-line 元素
  *
  * 查找顺序：
- *   1. CM6 domAtPos —— 通过 lineStart 偏移量直接定位（最可靠）
- *   2. hint 文本匹配 —— domAtPos 失败时兜底
+ *   1. CM6 domAtPos —— 通过源码偏移量直接定位
+ *   2. hint 文本匹配 —— 用日期标题 startsWith 匹配
  *   3. .cm-activeLine —— 最后兜底
  */
 function findEditorLineEl(
@@ -118,7 +167,7 @@ function findEditorLineEl(
 ): HTMLElement | null {
 	const cm = (editor as any).cm;
 
-	// 方式 1：CM6 domAtPos（基于 lineStart）
+	// 方式 1：CM6 domAtPos
 	if (cm?.domAtPos && cm?.state) {
 		try {
 			const lineObj = cm.state.doc.line(line + 1); // CM6 行号 1-based
@@ -136,7 +185,7 @@ function findEditorLineEl(
 		}
 	}
 
-	// 方式 2：hint startsWith 匹配（编辑模式 DOM）
+	// 方式 2：用 hint（日期标题）startsWith 匹配
 	if (hint) {
 		const lines = view.contentEl.querySelectorAll<HTMLElement>('.cm-line');
 		for (let i = 0; i < lines.length; i++) {
@@ -153,27 +202,68 @@ function findEditorLineEl(
 }
 
 // ────────────────────────────────────────────────────────────────
-// 高亮管理
+// 高亮（class + CSS animation，setTimeout 控制时机）
 // ────────────────────────────────────────────────────────────────
 
+let scrollToken = 0;
+let highlightTimer: number | null = null;
 let currentHighlightEl: HTMLElement | null = null;
-let currentHighlightTimeout: number | null = null;
 
 function clearCurrentHighlight(): void {
-	if (currentHighlightTimeout != null) {
-		clearTimeout(currentHighlightTimeout);
-		currentHighlightTimeout = null;
+	if (highlightTimer) {
+		clearTimeout(highlightTimer);
+		highlightTimer = null;
 	}
 	if (currentHighlightEl) {
-		currentHighlightEl.classList.remove('sfc-flash');
+		currentHighlightEl.classList.remove('sfc-jump-flash');
 		currentHighlightEl = null;
 	}
+}
+
+/**
+ * 500ms 后添加高亮 class，1500ms 后移除
+ *
+ * 不依赖滚动动画完成，用 setTimeout 控制：
+ *   - 500ms 时滚动已基本完成（600ms 动画的 83%），目标行在视口中心
+ *   - 此时 domAtPos 定位准确，高亮不会错行
+ */
+function scheduleHighlight(
+	view: MarkdownView,
+	editor: MarkdownView['editor'],
+	targetLine: number,
+	hint?: string,
+): void {
+	if (highlightTimer) {
+		clearTimeout(highlightTimer);
+	}
+	highlightTimer = window.setTimeout(() => {
+		highlightTimer = null;
+		const lineEl = findEditorLineEl(view, editor, targetLine, hint);
+		if (!lineEl) return;
+
+		// 重置 animation（连续点击时重新播放）
+		lineEl.classList.remove('sfc-jump-flash');
+		void lineEl.offsetWidth;
+		lineEl.classList.add('sfc-jump-flash');
+		currentHighlightEl = lineEl;
+
+		// 1500ms 后移除高亮 class
+		setTimeout(() => {
+			if (currentHighlightEl === lineEl) {
+				lineEl.classList.remove('sfc-jump-flash');
+				currentHighlightEl = null;
+			}
+		}, 1500);
+	}, 500);
 }
 
 // ────────────────────────────────────────────────────────────────
 // 工具函数
 // ────────────────────────────────────────────────────────────────
 
+/**
+ * 轮询等待 MarkdownView 的 editor 就绪
+ */
 async function waitForEditor(
 	view: MarkdownView,
 	maxAttempts = 30,
