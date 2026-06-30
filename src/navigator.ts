@@ -3,15 +3,14 @@ import { MarkdownView, WorkspaceLeaf, type Plugin } from 'obsidian';
 /**
  * 跳转到 Calendar.md 指定行
  *
- * 统一切换到编辑模式（不管用户当前是阅读模式还是编辑模式）：
- *   - 编辑模式有 CM6 API，定位精确
+ * 统一切换到编辑模式，行为：
  *   - 光标置于行末（日期后 / 内容后），方便编辑
- *   - smooth 滚动动画（手动 rAF）
+ *   - rAF smooth 滚动动画（easeOutCubic 缓动）
  *   - 目标行居中显示
- *   - 目标行黄色闪烁高亮
+ *   - 滚动完成后目标行黄色闪烁高亮（避免滚动期间大面积阴影重绘导致卡顿）
  *
  * @param line 0-based 行号
- * @param hint 日期标题（如 "06-16 Tue"），保留参数兼容调用方
+ * @param hint 日期标题（如 "06-16 Tue"），用于兜底匹配行元素
  */
 export async function navigateToCalendarLine(
 	plugin: Plugin,
@@ -23,6 +22,8 @@ export async function navigateToCalendarLine(
 	if (!file) return;
 
 	try {
+		clearCurrentHighlight();
+
 		// 1. 查找 Calendar.md 是否已在某个 leaf 中打开
 		let targetLeaf: WorkspaceLeaf | null = null;
 		const leaves = plugin.app.workspace.getLeavesOfType('markdown');
@@ -55,7 +56,7 @@ export async function navigateToCalendarLine(
 			await view.setState(state, { history: true });
 		}
 
-		// 5. 等待 editor 就绪（模式切换后 editor 需要时间初始化）
+		// 5. 等待 editor 就绪
 		const editor = await waitForEditor(view);
 		if (!editor) return;
 
@@ -66,62 +67,165 @@ export async function navigateToCalendarLine(
 		editor.setCursor(pos);
 		editor.focus();
 
-		// 7. 等待 CM6 渲染（.cm-activeLine 更新到新光标行）
-		await new Promise((r) => setTimeout(r, 120));
+		// 7. 等待 CM6 渲染（光标行装饰更新 + coordsAtPos 就绪）
+		await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-		// 8. 居中 + smooth 动画 + 高亮
+		const cm = (editor as any).cm;
 		const scroller = view.contentEl.querySelector<HTMLElement>('.cm-scroller');
-		const activeLine = view.contentEl.querySelector<HTMLElement>('.cm-activeLine');
 
-		if (!scroller || !activeLine) {
-			// fallback：用 Obsidian 原生 scrollIntoView 居中
+		// 8. 计算目标 scrollTop（用 coordsAtPos，即使目标行未渲染也能估算位置）
+		const targetTop = cm && scroller ? computeTargetTop(cm, scroller, targetLine) : null;
+
+		if (targetTop != null && scroller) {
+			// 9. rAF smooth 滚动到目标位置
+			await smoothScrollTo(scroller, targetTop);
+		} else {
+			// fallback：CM6 原生 scrollIntoView（瞬间，无动画，但确保目标行进入视口）
 			editor.scrollIntoView({ from: pos, to: pos }, true);
-			return;
+			await new Promise((r) => setTimeout(r, 120));
 		}
 
-		// 计算目标 scrollTop（让 activeLine 居中）
-		const scrollerRect = scroller.getBoundingClientRect();
-		const lineRect = activeLine.getBoundingClientRect();
-		const lineTopInScroller = lineRect.top - scrollerRect.top + scroller.scrollTop;
-		const targetTop = lineTopInScroller - scrollerRect.height / 2 + lineRect.height / 2;
-
-		// smooth 滚动 + 高亮
-		smoothScrollTo(scroller, targetTop, 350);
-		flashHighlight(activeLine);
+		// 10. 滚动完成后，目标行已渲染且在视口中心，定位并高亮
+		const lineEl = findEditorLineEl(view, editor, targetLine, hint);
+		if (lineEl) flashHighlight(lineEl);
 	} catch (e) {
 		console.error('[SFC] navigateToCalendarLine error:', e);
 	}
 }
 
 // ────────────────────────────────────────────────────────────────
-// 工具函数
+// 位置计算 + 滚动
 // ────────────────────────────────────────────────────────────────
 
 /**
- * 手动 rAF smooth 滚动动画
+ * 用 CM6 coordsAtPos 计算让目标行居中的 scrollTop
  *
- * 不依赖 scrollTo({ behavior: 'smooth' })：.cm-scroller 的 scroll-behavior
- * 可能被 CM6 干预或 CSS 覆盖。手动逐帧设置 scrollTop 最可靠。
+ * coordsAtPos 返回目标行首字符的屏幕坐标。即使目标行在视口外较远
+ * 位置未渲染，CM6 也能根据文档结构估算其坐标。
+ *
+ * @returns 目标 scrollTop，若计算失败返回 null
  */
-function smoothScrollTo(scroller: HTMLElement, targetTop: number, duration = 350): void {
-	const startTop = scroller.scrollTop;
-	const distance = targetTop - startTop;
-	if (Math.abs(distance) < 1) return;
+function computeTargetTop(
+	cm: any,
+	scroller: HTMLElement,
+	line: number,
+): number | null {
+	try {
+		const lineObj = cm.state.doc.line(line + 1); // CM6 行号 1-based
+		const coords = cm.coordsAtPos(lineObj.from);
+		if (!coords) return null;
 
-	const startTime = performance.now();
-	const animate = (now: number): void => {
-		const progress = Math.min((now - startTime) / duration, 1);
-		// easeInOutCubic
-		const eased =
-			progress < 0.5
-				? 4 * progress * progress * progress
-				: 1 - Math.pow(-2 * progress + 2, 3) / 2;
-		scroller.scrollTop = startTop + distance * eased;
-		if (progress < 1) {
-			requestAnimationFrame(animate);
+		const scrollerRect = scroller.getBoundingClientRect();
+		const lineMidInScroller =
+			(coords.top + coords.bottom) / 2 - scrollerRect.top + scroller.scrollTop;
+		return lineMidInScroller - scrollerRect.height / 2;
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * rAF smooth 滚动（easeOutCubic 缓动）
+ *
+ * 返回 Promise，动画结束后 resolve。高亮在 resolve 后触发，
+ * 避免滚动期间 box-shadow 大面积重绘导致卡顿。
+ */
+function smoothScrollTo(scroller: HTMLElement, targetTop: number): Promise<void> {
+	return new Promise((resolve) => {
+		const startTop = scroller.scrollTop;
+		const distance = targetTop - startTop;
+		if (Math.abs(distance) < 2) {
+			resolve();
+			return;
 		}
-	};
-	requestAnimationFrame(animate);
+
+		const duration = 400;
+		const startTime = performance.now();
+
+		const step = (now: number) => {
+			const elapsed = now - startTime;
+			const t = Math.min(elapsed / duration, 1);
+			// easeOutCubic：起步快、末段慢，接近 cubic-bezier(0.22, 1, 0.36, 1)
+			const eased = 1 - Math.pow(1 - t, 3);
+			scroller.scrollTop = startTop + distance * eased;
+			if (t < 1) {
+				requestAnimationFrame(step);
+			} else {
+				resolve();
+			}
+		};
+		requestAnimationFrame(step);
+	});
+}
+
+// ────────────────────────────────────────────────────────────────
+// 目标行定位
+// ────────────────────────────────────────────────────────────────
+
+/**
+ * 定位目标行的 .cm-line 元素
+ *
+ * 在滚动完成后调用：此时目标行已在视口中心且已渲染，domAtPos 最可靠。
+ *
+ * 查找顺序：
+ *   1. CM6 domAtPos —— 通过源码偏移量直接定位
+ *   2. hint 文本匹配 —— 用日期标题 startsWith 匹配（domAtPos 失败时）
+ *   3. .cm-activeLine —— 最后兜底
+ */
+function findEditorLineEl(
+	view: MarkdownView,
+	editor: MarkdownView['editor'],
+	line: number,
+	hint?: string,
+): HTMLElement | null {
+	const cm = (editor as any).cm;
+
+	// 方式 1：CM6 domAtPos（滚动完成后目标行已渲染，此方法最可靠）
+	if (cm?.domAtPos && cm?.state) {
+		try {
+			const lineObj = cm.state.doc.line(line + 1); // CM6 行号 1-based
+			const dom = cm.domAtPos(lineObj.from);
+			let node: Node | null = dom.node;
+			if (node && node.nodeType === Node.TEXT_NODE) {
+				node = node.parentElement;
+			}
+			if (node) {
+				const lineEl = (node as HTMLElement).closest('.cm-line');
+				if (lineEl) return lineEl as HTMLElement;
+			}
+		} catch {
+			// ignore
+		}
+	}
+
+	// 方式 2：用 hint（日期标题，如 "01-22 Wed"）startsWith 匹配
+	if (hint) {
+		const lines = view.contentEl.querySelectorAll<HTMLElement>('.cm-line');
+		for (let i = 0; i < lines.length; i++) {
+			const el = lines[i]!;
+			const text = (el.textContent || '').trim();
+			if (text.startsWith(hint) || hint.startsWith(text)) {
+				return el;
+			}
+		}
+	}
+
+	// 方式 3：.cm-activeLine（兜底）
+	return view.contentEl.querySelector<HTMLElement>('.cm-activeLine');
+}
+
+// ────────────────────────────────────────────────────────────────
+// 高亮
+// ────────────────────────────────────────────────────────────────
+
+let currentHighlightEl: HTMLElement | null = null;
+
+function clearCurrentHighlight(): void {
+	if (currentHighlightEl) {
+		currentHighlightEl.style.boxShadow = '';
+		currentHighlightEl.style.transition = '';
+		currentHighlightEl = null;
+	}
 }
 
 /**
@@ -130,8 +234,13 @@ function smoothScrollTo(scroller: HTMLElement, targetTop: number, duration = 350
  * 用 inline style + box-shadow inset 模拟 background：
  *   1. inline style 优先级最高，能覆盖主题的 .cm-activeLine 默认背景
  *   2. box-shadow inset 不会被元素的 background-color 覆盖
+ *
+ * 在滚动完成后调用，避免滚动期间大面积阴影重绘导致卡顿。
  */
 function flashHighlight(el: HTMLElement): void {
+	clearCurrentHighlight();
+	currentHighlightEl = el;
+
 	el.style.transition = 'none';
 	el.style.boxShadow = '';
 	void el.offsetWidth;
@@ -146,10 +255,17 @@ function flashHighlight(el: HTMLElement): void {
 	});
 
 	setTimeout(() => {
-		el.style.boxShadow = '';
-		el.style.transition = '';
+		if (currentHighlightEl === el) {
+			el.style.boxShadow = '';
+			el.style.transition = '';
+			currentHighlightEl = null;
+		}
 	}, 1900);
 }
+
+// ────────────────────────────────────────────────────────────────
+// 工具函数
+// ────────────────────────────────────────────────────────────────
 
 /**
  * 轮询等待 MarkdownView 的 editor 就绪
