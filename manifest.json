@@ -1,0 +1,9 @@
+{
+	"id": "single-file-calendar",
+	"name": "Single File Calendar",
+	"version": "1.0.0",
+	"minAppVersion": "1.0.0",
+	"description": "在单份 Markdown 文档中管理连续日期结构，支持快速跳转、插入记录和自定义大纲导航。",
+	"author": "Your Name",
+	"isDesktopOnly": false
+}

@@ -1,0 +1,341 @@
+/* Single File Calendar */
+
+.single-file-calendar-outline {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+/* ==================== Toolbar ==================== */
+
+.sfc-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	gap: 8px;
+	flex-shrink: 0;
+}
+
+.sfc-tab-group {
+	display: flex;
+	gap: 2px;
+}
+
+.sfc-tab-btn {
+	padding: 4px 12px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 5px;
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 500;
+	transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.sfc-tab-btn:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.sfc-tab-active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.sfc-tab-active:hover {
+	background: var(--interactive-accent-hover);
+	color: var(--text-on-accent);
+}
+
+/* ==================== Sub Toolbar ==================== */
+
+.sfc-subtoolbar {
+	display: flex;
+	gap: 4px;
+	padding: 6px 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
+}
+
+.sfc-btn {
+	padding: 3px 10px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	font-size: 12px;
+}
+
+.sfc-btn:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.sfc-btn-active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.sfc-btn-active:hover {
+	background: var(--interactive-accent-hover);
+	color: var(--text-on-accent);
+}
+
+/* ==================== Content ==================== */
+
+.sfc-content {
+	flex: 1;
+	overflow-y: auto;
+}
+
+.sfc-empty {
+	padding: 24px 16px;
+	color: var(--text-muted);
+	text-align: center;
+	font-size: 13px;
+}
+
+/* ==================== Tree (Calendar Tab) ==================== */
+
+.sfc-tree {
+	padding: 4px 0;
+}
+
+.sfc-node {
+	padding: 2px 12px;
+	cursor: pointer;
+	border-radius: 3px;
+}
+
+.sfc-node:hover {
+	background: var(--background-modifier-hover);
+}
+
+.sfc-node-title {
+	font-size: 13px;
+	color: var(--text-normal);
+}
+
+.sfc-children {
+	padding-left: 16px;
+}
+
+/* ==================== List (Content / Upcoming Tab) ==================== */
+
+.sfc-list {
+	padding: 4px 0;
+}
+
+.sfc-list-month {
+	padding: 8px 12px 4px;
+}
+
+.sfc-list-month-title {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-muted);
+	text-transform: uppercase;
+}
+
+.sfc-list-row {
+	display: flex;
+	gap: 8px;
+	padding: 3px 12px;
+	cursor: pointer;
+	border-radius: 3px;
+	align-items: baseline;
+}
+
+.sfc-list-row:hover {
+	background: var(--background-modifier-hover);
+}
+
+.sfc-list-row.is-active {
+	background: var(--background-modifier-active-hover);
+	color: var(--text-normal);
+}
+
+.sfc-list-row.is-active .sfc-list-date {
+	color: var(--text-normal);
+	font-weight: 600;
+}
+
+.sfc-list-date {
+	font-size: 13px;
+	color: var(--text-normal);
+	font-weight: 500;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.sfc-list-content {
+	font-size: 12px;
+	color: var(--text-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* ==================== Inline Tabs (Calendar.md 内嵌) ==================== */
+
+.sfc-inline-container {
+	margin: 16px 0;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.sfc-inline-tabbar {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	padding: 6px 8px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.sfc-inline-tab-btn {
+	padding: 5px 12px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 5px;
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 500;
+	transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.sfc-inline-tab-btn:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.sfc-inline-tab-active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.sfc-inline-tab-active:hover {
+	background: var(--interactive-accent-hover);
+	color: var(--text-on-accent);
+}
+
+/* Level buttons (in tab bar) */
+
+.sfc-inline-levels {
+	display: flex;
+	gap: 4px;
+	margin-left: auto;
+	padding: 4px 8px;
+}
+
+.sfc-inline-level-btn {
+	padding: 2px 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	font-size: 11px;
+}
+
+.sfc-inline-level-btn:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.sfc-inline-level-active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.sfc-inline-level-active:hover {
+	background: var(--interactive-accent-hover);
+	color: var(--text-on-accent);
+}
+
+/* Content area */
+
+.sfc-inline-content {
+	padding: 8px 0;
+	max-height: 500px;
+	overflow-y: auto;
+}
+
+/* Tree (Calendar Tab) */
+
+.sfc-inline-node {
+	padding: 2px 12px;
+	cursor: default;
+	border-radius: 3px;
+	font-size: 13px;
+}
+
+.sfc-inline-node:hover {
+	background: var(--background-modifier-hover);
+}
+
+.sfc-inline-clickable {
+	cursor: pointer;
+}
+
+.sfc-inline-node-title {
+	color: var(--text-normal);
+}
+
+/* List (Content / Upcoming Tabs) */
+
+.sfc-inline-month {
+	padding: 8px 12px 4px;
+}
+
+.sfc-inline-month-title {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-muted);
+	text-transform: uppercase;
+}
+
+.sfc-inline-row {
+	display: flex;
+	gap: 8px;
+	padding: 3px 12px;
+	cursor: pointer;
+	border-radius: 3px;
+	align-items: baseline;
+}
+
+.sfc-inline-row:hover {
+	background: var(--background-modifier-hover);
+}
+
+.sfc-inline-date {
+	font-size: 13px;
+	color: var(--text-normal);
+	font-weight: 500;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.sfc-inline-desc {
+	font-size: 12px;
+	color: var(--text-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sfc-inline-empty {
+	padding: 24px 16px;
+	color: var(--text-muted);
+	text-align: center;
+	font-size: 13px;
+}
