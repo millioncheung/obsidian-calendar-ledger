@@ -36,9 +36,12 @@ export async function navigateToCalendarLine(
 		}
 
 		// 2. 没有则新建 tab 打开
+		//    不传 eState: { line } —— 它会触发 Obsidian 原生跳转高亮（短行 flash），
+		//    与本插件的 flashHighlight 叠加成两层，且原生高亮不会自动清除。
+		//    后续步骤 6-10 会自己处理光标、滚动和高亮。
 		if (!targetLeaf) {
 			targetLeaf = plugin.app.workspace.getLeaf('tab');
-			await targetLeaf.openFile(file, { active: true, eState: { line } });
+			await targetLeaf.openFile(file, { active: true });
 		} else {
 			plugin.app.workspace.revealLeaf(targetLeaf);
 		}
