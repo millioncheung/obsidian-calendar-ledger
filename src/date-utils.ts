@@ -71,19 +71,38 @@ export function generateDateRange(startYear: number, endYear: number): Date[] {
 export function parseDate(dateStr: string): Date | null {
 	const match = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
 	if (!match) return null;
-	const [_, y, m, d] = match;
-	const date = new Date(Number(y), Number(m) - 1, Number(d));
+	const [, y, m, d] = match;
+	const year = Number(y);
+	const month = Number(m);
+	const day = Number(d);
+	if (month < 1 || month > 12 || day < 1) return null;
+	const date = new Date(year, month - 1, day);
 	if (isNaN(date.getTime())) return null;
+	if (
+		date.getFullYear() !== year ||
+		date.getMonth() !== month - 1 ||
+		date.getDate() !== day
+	) {
+		return null;
+	}
 	return date;
 }
 
 /**
  * 将灵活格式的日期字符串 normalize 为 YYYY-MM-DD
- * 支持 YYYY-M-D / YYYY-MM-D / YYYY-M-DD / YYYY-MM-DD
- * 无效日期返回 null
+ * 支持：
+ * - YYYY-M-D / YYYY-MM-D / YYYY-M-DD / YYYY-MM-DD
+ * - M-D / MM-D / M-DD / MM-DD（年份默认当前年）
+ *
+ * 无效日期返回 null。
  */
-export function normalizeDate(dateStr: string): string | null {
-	const date = parseDate(dateStr);
+export function normalizeDate(dateStr: string, defaultYear: number = new Date().getFullYear()): string | null {
+	const trimmed = dateStr.trim();
+	const shortMatch = trimmed.match(/^(\d{1,2})-(\d{1,2})$/);
+	const candidate = shortMatch
+		? `${defaultYear}-${shortMatch[1]}-${shortMatch[2]}`
+		: trimmed;
+	const date = parseDate(candidate);
 	if (!date) return null;
 	return formatDate(date);
 }
@@ -120,6 +139,7 @@ export interface ParsedRange {
  *
  * 支持的格式：
  *   06-15~06-27         跨月范围（同一年内）
+ *   06-15～06～27       兼容结束日期误用范围符号作月日分隔符
  *   6.15~6.27           点分隔
  *   2026-06-15~2026-06-27  完整日期范围
  *   06-15 ~ 06-27       带空格
@@ -143,8 +163,9 @@ export function parseRangesFromText(text: string, yearHint: number): ParsedRange
 		}
 	}
 
-	// 匹配短日期范围：MM-DD ~ MM-DD 或 M.D ~ M.D
-	const shortRangeRegex = /(\d{1,2})[.-](\d{1,2})\s*[~～]\s*(\d{1,2})[.-](\d{1,2})/g;
+	// 匹配短日期范围：MM-DD ~ MM-DD 或 M.D ~ M.D。
+	// 结束日期兼容 `07～25`，用于容错 `07-20～07～25` 这类常见输入。
+	const shortRangeRegex = /(\d{1,2})[.-](\d{1,2})\s*[~～]\s*(\d{1,2})[.\-~～](\d{1,2})/g;
 	while ((match = shortRangeRegex.exec(text)) !== null) {
 		const rawText = match[0];
 		// 检查是否已被完整日期范围覆盖（避免重复）
@@ -167,11 +188,11 @@ export function parseRangesFromText(text: string, yearHint: number): ParsedRange
 		const startYear = yearHint;
 		const endYear = endMonth < startMonth ? yearHint + 1 : yearHint;
 
-		const startStr = formatDate(new Date(startYear, startMonth - 1, startDay));
-		const endStr = formatDate(new Date(endYear, endMonth - 1, endDay));
+		const startStr = normalizeDate(`${startYear}-${startMonth}-${startDay}`);
+		const endStr = normalizeDate(`${endYear}-${endMonth}-${endDay}`);
 
 		// 验证日期有效性
-		if (startStr && endStr && !isNaN(new Date(startStr).getTime()) && !isNaN(new Date(endStr).getTime())) {
+		if (startStr && endStr) {
 			results.push({ startDate: startStr, endDate: endStr, rawText });
 		}
 	}
@@ -245,9 +266,9 @@ export function formatDateTitle(dateStr: string, language: 'en' | 'zh'): string 
 export function stripRangeText(content: string, rangeText: string): string {
 	let result = content.replace(rangeText, '');
 	// 清理残留的分隔符和多余空格
-	result = result.replace(/[；｜]\s*[；｜]/g, '；');  // 双分隔符合并
-	result = result.replace(/^[；｜]\s*/, '');            // 开头分隔符
-	result = result.replace(/\s*[；｜]$/, '');            // 结尾分隔符
+	result = result.replace(/[；|｜]\s*[；|｜]/g, '；');  // 双分隔符合并
+	result = result.replace(/^[；|｜]\s*/, '');            // 开头分隔符
+	result = result.replace(/\s*[；|｜]$/, '');            // 结尾分隔符
 	result = result.replace(/\s+/g, ' ');                 // 多余空格
 	return result.trim();
 }

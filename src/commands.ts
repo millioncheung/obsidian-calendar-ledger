@@ -4,7 +4,12 @@ import { generateCalendarMarkdown, generateYearMarkdown } from './calendar-gener
 import { createCalendarFile, insertItemToDate, appendYearToCalendar, migrateToLatestFormat } from './calendar-writer';
 import { navigateToCalendarLine } from './navigator';
 import { getTodayStr, normalizeDate } from './date-utils';
+import { confirmAction } from './confirm-modal';
 import type { SingleFileCalendarSettings } from './types';
+
+type PluginWithSettings = Plugin & {
+	saveSettings: () => Promise<void>;
+};
 
 export function registerCommands(
 	plugin: Plugin,
@@ -14,13 +19,13 @@ export function registerCommands(
 	// 1. 生成日历
 	plugin.addCommand({
 		id: 'generate-calendar',
-		name: 'Generate calendar file',
+		name: '生成日历文件',
 		callback: async () => {
 			const s = getSettings();
 			const content = generateCalendarMarkdown(s);
 			const success = await createCalendarFile(plugin.app.vault, s.calendarFilePath, content);
 			if (success) {
-				new Notice('Calendar file generated successfully.');
+				new Notice('日历文件已生成。');
 			}
 		},
 	});
@@ -28,13 +33,23 @@ export function registerCommands(
 	// 1.5 覆盖日历
 	plugin.addCommand({
 		id: 'overwrite-calendar',
-		name: 'Overwrite calendar file',
+		name: '覆盖日历文件',
 		callback: async () => {
 			const s = getSettings();
+			const existingFile = plugin.app.vault.getFileByPath(s.calendarFilePath);
+			if (existingFile) {
+				const confirmed = await confirmAction(
+					plugin.app,
+					'覆盖日历文件？',
+					'这会替换现有的日历文件，文件中的已有记录将会丢失。',
+					'覆盖',
+				);
+				if (!confirmed) return;
+			}
 			const content = generateCalendarMarkdown(s);
 			const success = await createCalendarFile(plugin.app.vault, s.calendarFilePath, content, true);
 			if (success) {
-				new Notice('Calendar file overwritten successfully.');
+				new Notice('日历文件已覆盖。');
 			}
 		},
 	});
@@ -42,14 +57,16 @@ export function registerCommands(
 	// 2. 追加年份
 	plugin.addCommand({
 		id: 'append-year',
-		name: 'Append year',
+		name: '追加年份',
 		callback: async () => {
 			const s = getSettings();
 			const year = s.endYear + 1;
 			const yearContent = generateYearMarkdown(year, s);
 			const success = await appendYearToCalendar(plugin.app.vault, s.calendarFilePath, yearContent, year);
 			if (success) {
-				new Notice(`Year ${year} appended successfully.`);
+				s.endYear = year;
+				await (plugin as PluginWithSettings).saveSettings();
+				new Notice(`已追加 ${year} 年。`);
 			}
 		},
 	});
@@ -57,15 +74,15 @@ export function registerCommands(
 	// 3. 跳转到今天
 	plugin.addCommand({
 		id: 'jump-to-today',
-		name: 'Jump to today',
+		name: '跳转到今天',
 		callback: async () => {
 			const today = getTodayStr();
 			try {
 				await jumpToDate(plugin, getSettings(), today);
-				new Notice(`Jumped to ${today}`);
+				new Notice(`已跳转到 ${today}`);
 			} catch (error) {
 				console.error('Jump to today error:', error);
-				new Notice(`Jump to today failed: ${error}`);
+				new Notice(`跳转到今天失败：${error instanceof Error ? error.message : String(error)}`);
 			}
 		},
 	});
@@ -73,11 +90,11 @@ export function registerCommands(
 	// 4. 跳转到指定日期
 	plugin.addCommand({
 		id: 'jump-to-date',
-		name: 'Jump to date',
+		name: '跳转到指定日期',
 		callback: async () => {
 			const s = getSettings();
-			new DateInputModal(plugin.app, async (dateStr) => {
-				await jumpToDate(plugin, s, dateStr);
+			new DateInputModal(plugin.app, (dateStr) => {
+				void jumpToDate(plugin, s, dateStr);
 			}).open();
 		},
 	});
@@ -85,18 +102,20 @@ export function registerCommands(
 	// 5. 向指定日期插入记录
 	plugin.addCommand({
 		id: 'add-item-to-date',
-		name: 'Add item to date',
+		name: '向指定日期添加记录',
 		callback: async () => {
 			const s = getSettings();
-			new DateInputModal(plugin.app, async (dateStr) => {
-				new ItemInputModal(plugin.app, async (item) => {
-					const result = await insertItemToDate(plugin.app.vault, s.calendarFilePath, dateStr, item);
-					if (result !== null) {
-						// 等待 vault.modify 后 editor 刷新内容，避免 setCursor 用到旧 lineContent
-						await new Promise((r) => setTimeout(r, 120));
-						await navigateToCalendarLine(plugin, s.calendarFilePath, result.line, result.title);
-						new Notice(`Item added to ${dateStr}.`);
-					}
+			new DateInputModal(plugin.app, (dateStr) => {
+				new ItemInputModal(plugin.app, (item) => {
+					void (async () => {
+						const result = await insertItemToDate(plugin.app.vault, s.calendarFilePath, dateStr, item);
+						if (result !== null) {
+							// 等待 vault.modify 后 editor 刷新内容，避免 setCursor 用到旧 lineContent
+							await new Promise((r) => window.setTimeout(r, 120));
+							await navigateToCalendarLine(plugin, s.calendarFilePath, result.line, result.title);
+							new Notice(`已添加记录到 ${dateStr}。`);
+						}
+					})().catch((error) => console.error('[SFC] Add item error:', error));
 				}).open();
 			}).open();
 		},
@@ -105,17 +124,19 @@ export function registerCommands(
 	// 6. 向今天插入记录（快捷命令）
 	plugin.addCommand({
 		id: 'add-item-to-today',
-		name: 'Add item to today',
+		name: '向今天添加记录',
 		callback: async () => {
 			const s = getSettings();
-			new ItemInputModal(plugin.app, async (item) => {
-				const today = getTodayStr();
-				const result = await insertItemToDate(plugin.app.vault, s.calendarFilePath, today, item);
-				if (result !== null) {
-					await new Promise((r) => setTimeout(r, 120));
-					await navigateToCalendarLine(plugin, s.calendarFilePath, result.line, result.title);
-					new Notice(`Item added to today (${today}).`);
-				}
+			new ItemInputModal(plugin.app, (item) => {
+				void (async () => {
+					const today = getTodayStr();
+					const result = await insertItemToDate(plugin.app.vault, s.calendarFilePath, today, item);
+					if (result !== null) {
+						await new Promise((r) => window.setTimeout(r, 120));
+						await navigateToCalendarLine(plugin, s.calendarFilePath, result.line, result.title);
+						new Notice(`已添加记录到今天（${today}）。`);
+					}
+				})().catch((error) => console.error('[SFC] Add today item error:', error));
 			}).open();
 		},
 	});
@@ -123,12 +144,12 @@ export function registerCommands(
 	// 7. 迁移到最新格式
 	plugin.addCommand({
 		id: 'migrate-to-latest-format',
-		name: 'Migrate to latest format',
+		name: '迁移到最新格式',
 		callback: async () => {
 			const s = getSettings();
 			const count = await migrateToLatestFormat(plugin.app.vault, s.calendarFilePath);
 			if (count > 0) {
-				new Notice(`Migrated ${count} item(s) to latest format.`);
+				new Notice(`已在 ${s.calendarFilePath} 完成 ${count} 处格式修复或迁移。`);
 			}
 		},
 	});
@@ -143,7 +164,7 @@ export function registerCommands(
 async function jumpToDate(plugin: Plugin, settings: SingleFileCalendarSettings, dateStr: string): Promise<void> {
 	const file = plugin.app.vault.getFileByPath(settings.calendarFilePath);
 	if (!file) {
-		new Notice(`Calendar file not found: ${settings.calendarFilePath}`);
+		new Notice(`找不到日历文件：${settings.calendarFilePath}`);
 		return;
 	}
 
@@ -152,7 +173,7 @@ async function jumpToDate(plugin: Plugin, settings: SingleFileCalendarSettings, 
 
 	const block = dayBlockMap[dateStr];
 	if (!block) {
-		new Notice(`Date ${dateStr} not found in calendar.`);
+		new Notice(`日历中找不到日期：${dateStr}`);
 		return;
 	}
 
@@ -168,12 +189,12 @@ class DateInputModal extends SuggestModal<string> {
 	constructor(app: Plugin['app'], onSubmit: (dateStr: string) => void) {
 		super(app);
 		this.onSubmit = onSubmit;
-		this.setPlaceholder('Enter date (e.g. 2026-7-30)');
+		this.setPlaceholder('输入日期，例如 7-30 或 2026-7-30');
 	}
 
 	getSuggestions(query: string): string[] {
 		// 如果输入看起来像日期，返回建议
-		if (query.match(/^\d{0,4}-?\d{0,2}-?\d{0,2}$/)) {
+		if (query.match(/^(\d{0,4}-?\d{0,2}-?\d{0,2}|\d{0,2}-?\d{0,2})$/)) {
 			return [query];
 		}
 		// 支持 "today" 快捷输入
@@ -184,13 +205,13 @@ class DateInputModal extends SuggestModal<string> {
 	}
 
 	renderSuggestion(value: string, el: HTMLElement): void {
-		el.setText(value === getTodayStr() ? `Today (${value})` : value);
+		el.setText(value === getTodayStr() ? `今天（${value}）` : value);
 	}
 
 	onChooseSuggestion(item: string): void {
 		const normalized = normalizeDate(item);
 		if (!normalized) {
-			new Notice('Invalid date. Please enter a valid date like 2026-7-30.');
+			new Notice('日期无效。请输入类似 7-30 或 2026-7-30 的有效日期。');
 			return;
 		}
 		this.onSubmit(normalized);
@@ -206,7 +227,7 @@ class ItemInputModal extends SuggestModal<string> {
 	constructor(app: Plugin['app'], onSubmit: (item: string) => void) {
 		super(app);
 		this.onSubmit = onSubmit;
-		this.setPlaceholder('Enter item content');
+		this.setPlaceholder('输入记录内容');
 	}
 
 	getSuggestions(query: string): string[] {
@@ -222,7 +243,7 @@ class ItemInputModal extends SuggestModal<string> {
 
 	onChooseSuggestion(item: string): void {
 		if (!item.trim()) {
-			new Notice('Item content cannot be empty.');
+			new Notice('记录内容不能为空。');
 			return;
 		}
 		this.onSubmit(item);

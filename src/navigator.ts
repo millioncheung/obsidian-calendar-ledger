@@ -1,5 +1,19 @@
 import { MarkdownView, WorkspaceLeaf, type Plugin } from 'obsidian';
 
+interface CodeMirrorLineLike {
+	from: number;
+}
+
+interface CodeMirrorLike {
+	state: { doc: { line: (line: number) => CodeMirrorLineLike } };
+	coordsAtPos: (position: number) => { top: number; bottom: number } | null;
+	domAtPos: (position: number) => { node: Node };
+}
+
+function getCodeMirror(editor: MarkdownView['editor']): CodeMirrorLike | null {
+	return (editor as unknown as { cm?: CodeMirrorLike }).cm ?? null;
+}
+
 /**
  * 跳转到 Calendar.md 指定行
  *
@@ -40,7 +54,7 @@ export async function navigateToCalendarLine(
 			targetLeaf = plugin.app.workspace.getLeaf('tab');
 			await targetLeaf.openFile(file, { active: true });
 		} else {
-			plugin.app.workspace.revealLeaf(targetLeaf);
+			await plugin.app.workspace.revealLeaf(targetLeaf);
 		}
 
 		// 3. 激活 leaf
@@ -68,9 +82,9 @@ export async function navigateToCalendarLine(
 		editor.focus();
 
 		// 7. 等待 CM6 渲染（光标行装饰更新 + coordsAtPos 就绪）
-		await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+		await new Promise((r) => window.requestAnimationFrame(() => window.requestAnimationFrame(r)));
 
-		const cm = (editor as any).cm;
+		const cm = getCodeMirror(editor);
 		const scroller = view.contentEl.querySelector<HTMLElement>('.cm-scroller');
 
 		// 8. 计算目标 scrollTop 并滚动（600ms 动画，不 await，与高亮并行）
@@ -101,7 +115,7 @@ export async function navigateToCalendarLine(
  * 位置未渲染，CM6 也能根据文档结构估算其坐标。
  */
 function computeTargetTop(
-	cm: any,
+	cm: CodeMirrorLike,
 	scroller: HTMLElement,
 	line: number,
 ): number | null {
@@ -141,10 +155,10 @@ function smoothScrollTo(scroller: HTMLElement, targetTop: number, duration: numb
 		const eased = 1 - Math.pow(1 - t, 4);
 		scroller.scrollTop = startTop + distance * eased;
 		if (t < 1) {
-			requestAnimationFrame(step);
+			window.requestAnimationFrame(step);
 		}
 	};
-	requestAnimationFrame(step);
+	window.requestAnimationFrame(step);
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -165,7 +179,7 @@ function findEditorLineEl(
 	line: number,
 	hint?: string,
 ): HTMLElement | null {
-	const cm = (editor as any).cm;
+	const cm = getCodeMirror(editor);
 
 	// 方式 1：CM6 domAtPos
 	if (cm?.domAtPos && cm?.state) {
@@ -211,7 +225,7 @@ let currentHighlightEl: HTMLElement | null = null;
 
 function clearCurrentHighlight(): void {
 	if (highlightTimer) {
-		clearTimeout(highlightTimer);
+		window.clearTimeout(highlightTimer);
 		highlightTimer = null;
 	}
 	if (currentHighlightEl) {
@@ -234,7 +248,7 @@ function scheduleHighlight(
 	hint?: string,
 ): void {
 	if (highlightTimer) {
-		clearTimeout(highlightTimer);
+		window.clearTimeout(highlightTimer);
 	}
 	highlightTimer = window.setTimeout(() => {
 		highlightTimer = null;
@@ -248,7 +262,7 @@ function scheduleHighlight(
 		currentHighlightEl = lineEl;
 
 		// 1500ms 后移除高亮 class
-		setTimeout(() => {
+		window.setTimeout(() => {
 			if (currentHighlightEl === lineEl) {
 				lineEl.classList.remove('sfc-jump-flash');
 				currentHighlightEl = null;
@@ -270,7 +284,7 @@ async function waitForEditor(
 ): Promise<MarkdownView['editor'] | null> {
 	for (let i = 0; i < maxAttempts; i++) {
 		if (view.editor) return view.editor;
-		await new Promise((r) => setTimeout(r, 50));
+		await new Promise((r) => window.setTimeout(r, 50));
 	}
 	return null;
 }

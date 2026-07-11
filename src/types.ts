@@ -1,12 +1,54 @@
+export type VisualizationType = 'none' | 'activity' | 'event' | 'monthly' | 'range';
+
+export interface VisualizationTagMapping {
+	vizType: VisualizationType;
+	displayName?: string;
+}
+
+/**
+ * Event-type classification for tags, derived from VisualizationTagMapping.
+ *
+ * - 'single-day': mapped to activity / event / monthly — count by occurrence
+ * - 'range':      mapped to range — count by occurrence AND by deduplicated day span
+ * - 'custom':     unmapped or mapped to 'none' — count by occurrence only
+ */
+export type TagEventType = 'single-day' | 'range' | 'custom';
+
+export function classifyTagEventType(
+	tag: string,
+	mappings: Record<string, VisualizationTagMapping>,
+): TagEventType {
+	const mapping = mappings[tag];
+	if (!mapping || mapping.vizType === 'none') return 'custom';
+	if (mapping.vizType === 'range') return 'range';
+	return 'single-day';
+}
+
+export interface YearSummaryTagCardSettings {
+	showCount: boolean;
+	showDays: boolean;
+}
+
+export interface YearSummaryCardSettings {
+	showRecordedDays: boolean;
+	tags: Record<string, YearSummaryTagCardSettings>;
+}
+
+export interface SidebarUiState {
+	collapsibleSections: Record<string, boolean>;
+}
+
 export interface SingleFileCalendarSettings {
 	calendarFilePath: string;
 	startYear: number;
 	endYear: number;
 	weekStartsOn: 'monday' | 'sunday';
 	language: 'en' | 'zh';
-	dateHeadingFormat: string;
 	showWeekNumber: boolean;
-	defaultOutlineLevel: 'year' | 'month' | 'week' | 'day';
+	enabledStatsTags: string[];
+	visualizationTagMappings: Record<string, VisualizationTagMapping>;
+	yearSummaryCards: YearSummaryCardSettings;
+	sidebarUiState: SidebarUiState;
 }
 
 export const DEFAULT_SETTINGS: SingleFileCalendarSettings = {
@@ -15,9 +57,23 @@ export const DEFAULT_SETTINGS: SingleFileCalendarSettings = {
 	endYear: new Date().getFullYear() + 2,
 	weekStartsOn: 'monday',
 	language: 'en',
-	dateHeadingFormat: 'YYYY-MM-DD ddd',
 	showWeekNumber: true,
-	defaultOutlineLevel: 'month',
+	enabledStatsTags: ['fitness', 'live', 'flight', 'travel'],
+	visualizationTagMappings: {
+		fitness: { vizType: 'activity', displayName: 'fitness' },
+		live: { vizType: 'event', displayName: 'live' },
+		flight: { vizType: 'monthly', displayName: 'flight' },
+		travel: { vizType: 'range', displayName: 'travel' },
+		'I-go': { vizType: 'range', displayName: 'I-go' },
+		'She-come': { vizType: 'range', displayName: 'She-come' },
+	},
+	yearSummaryCards: {
+		showRecordedDays: true,
+		tags: {},
+	},
+	sidebarUiState: {
+		collapsibleSections: {},
+	},
 };
 
 export interface CalendarDayBlock {

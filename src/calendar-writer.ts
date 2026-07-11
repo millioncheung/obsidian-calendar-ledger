@@ -1,6 +1,7 @@
 import { Notice, type Vault } from 'obsidian';
 import { parseCalendar } from './calendar-parser';
 import { generateCalendarMarkdown } from './calendar-generator';
+import { INLINE_SEPARATOR, migrateCalendarContent } from './calendar-migration';
 import type { SingleFileCalendarSettings } from './types';
 
 /**
@@ -78,7 +79,7 @@ export async function insertItemToDate(
 		if (block.hasInline) {
 			lines[block.lineStart] = dayLine + `；${item}`;
 		} else {
-			lines[block.lineStart] = dayLine + ` ｜ ${item}`;
+			lines[block.lineStart] = dayLine + INLINE_SEPARATOR + item;
 		}
 	} else {
 		// 旧格式 heading：在 heading 下一行插入 bullet
@@ -151,63 +152,14 @@ export async function migrateToLatestFormat(
 	}
 
 	const content = await vault.read(file);
-	const lines = content.split('\n');
-
-	// 步骤 1：修复旧 inline 格式（空格分隔 → ｜ 分隔）
-	// 匹配 day bullet 行，** 后面有内容但不是 ｜ 开头的
-	const OLD_INLINE_REGEX = /^(\s*-\s+\*\*.*?\*\*)\s+(?!｜)(.+)$/;
-	let fixedInlineCount = 0;
-	for (let i = 0; i < lines.length; i++) {
-		const line = lines[i] ?? '';
-		const match = line.match(OLD_INLINE_REGEX);
-		if (match) {
-			lines[i] = match[1] + ' ｜ ' + match[2];
-			fixedInlineCount++;
-		}
-	}
-
-	// 步骤 2：迁移子 bullet 到 inline
-	const { dayBlocks } = parseCalendar(lines.join('\n'));
-	const daysWithSubBullets = dayBlocks.filter((b) => b.hasSubBullets);
-
-	// 从下往上处理，避免行号偏移
-	for (let di = daysWithSubBullets.length - 1; di >= 0; di--) {
-		const block = daysWithSubBullets[di]!;
-		const subLines = lines.slice(block.lineStart + 1, block.lineEnd + 1);
-
-		const items: string[] = [];
-		for (const sl of subLines) {
-			const trimmed = sl.trim();
-			if (trimmed === '') continue;
-			const text = trimmed.replace(/^-\s*/, '');
-			if (text) items.push(text);
-		}
-
-		if (items.length === 0) continue;
-
-		const joined = items.join('；');
-
-		// 删除子 bullet 行
-		lines.splice(block.lineStart + 1, block.lineEnd - block.lineStart);
-
-		// 追加到日期行
-		const dayLine = lines[block.lineStart] ?? '';
-		if (block.hasInline) {
-			// 已有 inline 内容，用 ；追加
-			lines[block.lineStart] = dayLine + '；' + joined;
-		} else {
-			lines[block.lineStart] = dayLine + ' ｜ ' + joined;
-		}
-	}
-
-	const totalChanges = fixedInlineCount + daysWithSubBullets.length;
-	if (totalChanges === 0) {
-		new Notice('Already in latest format, nothing to migrate.');
+	const result = migrateCalendarContent(content);
+	if (result.changeCount === 0) {
+		new Notice(`已是最新格式，无需迁移：${filePath}`);
 	} else {
-		await vault.modify(file, lines.join('\n'));
+		await vault.modify(file, result.content);
 	}
 
-	return totalChanges;
+	return result.changeCount;
 }
 
 /**
@@ -215,8 +167,8 @@ export async function migrateToLatestFormat(
  *
  * 用于切换 showWeekNumber 等影响结构的设置后，自动更新已存在的文档。
  *
- * 重建范围由 settings.startYear / endYear 决定；超出该范围的旧年份
- * 及其内容会被丢弃。若文件不存在则静默跳过。
+ * 重建范围会覆盖 settings.startYear / endYear 以及现有文件中的所有年份，
+ * 避免切换结构设置时丢失旧年份记录。若文件不存在则静默跳过。
  */
 export async function restructureCalendar(
 	vault: Vault,
@@ -230,6 +182,18 @@ export async function restructureCalendar(
 
 	const content = await vault.read(file);
 	const { dayBlockMap } = parseCalendar(content);
+	const existingYears = Object.keys(dayBlockMap)
+		.map((dateStr) => Number(dateStr.slice(0, 4)))
+		.filter((year) => !isNaN(year));
+	const safeSettings: SingleFileCalendarSettings = {
+		...settings,
+		startYear: existingYears.length > 0
+			? Math.min(settings.startYear, ...existingYears)
+			: settings.startYear,
+		endYear: existingYears.length > 0
+			? Math.max(settings.endYear, ...existingYears)
+			: settings.endYear,
+	};
 
 	// 收集 inline 内容，重建后追加回 day bullet 行
 	const inlineMap: Record<string, string> = {};
@@ -250,7 +214,7 @@ export async function restructureCalendar(
 		});
 	};
 
-	let newContent = generateCalendarMarkdown(settings, getContent);
+	let newContent = generateCalendarMarkdown(safeSettings, getContent);
 
 	// 将 inline 内容追加回 day bullet 行
 	if (Object.keys(inlineMap).length > 0) {
@@ -260,10 +224,10 @@ export async function restructureCalendar(
 		const entries = Object.entries(newMap)
 			.filter(([_, b]) => inlineMap[b.date])
 			.sort((a, b) => b[1].lineStart - a[1].lineStart);
-		for (const [_, block] of entries) {
+		for (const [, block] of entries) {
 			const inline = inlineMap[block.date];
 			if (inline) {
-				newLines[block.lineStart] = newLines[block.lineStart] + ' ｜ ' + inline;
+				newLines[block.lineStart] = newLines[block.lineStart] + INLINE_SEPARATOR + inline;
 			}
 		}
 		newContent = newLines.join('\n');

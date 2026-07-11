@@ -1,13 +1,15 @@
-import { Plugin } from 'obsidian';
+import { Plugin, TFile } from 'obsidian';
 import { DEFAULT_SETTINGS } from './types';
 import type { SingleFileCalendarSettings } from './types';
 import { SingleFileCalendarSettingTab } from './settings';
 import { registerCommands } from './commands';
 import { CalendarOutlineView, OUTLINE_VIEW_TYPE } from './outline-view';
 
+const REFRESH_DEBOUNCE_MS = 250;
+
 export default class SingleFileCalendarPlugin extends Plugin {
 	settings!: SingleFileCalendarSettings;
-	private outlineView: CalendarOutlineView | null = null;
+	private refreshTimer: number | null = null;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -18,45 +20,58 @@ export default class SingleFileCalendarPlugin extends Plugin {
 		// 注册自定义 Outline View
 		this.registerView(
 			OUTLINE_VIEW_TYPE,
-			(leaf) => {
-				this.outlineView = new CalendarOutlineView(leaf, this, this.settings);
-				return this.outlineView;
-			},
+			(leaf) => new CalendarOutlineView(leaf, this, this.settings),
 		);
 
 		// 添加打开 Outline 的命令
 		this.addCommand({
 			id: 'open-calendar-outline',
-			name: 'Open calendar outline',
+			name: '打开日历大纲',
 			callback: () => this.activateOutlineView(),
 		});
 
 		// 添加 Ribbon 图标
-		this.addRibbonIcon('calendar-days', 'Single File Calendar', () => {
-			this.activateOutlineView();
+		this.addRibbonIcon('calendar-days', 'Single file calendar', () => {
+			void this.activateOutlineView();
 		});
 
 		// 注册设置页
 		this.addSettingTab(new SingleFileCalendarSettingTab(this.app, this));
+
+		// 监听 Calendar.md 修改，debounce 后统一刷新 sidebar tab
+		this.registerEvent(
+			this.app.vault.on('modify', (file) => {
+				if (!(file instanceof TFile)) return;
+				if (file.path !== this.settings.calendarFilePath) return;
+				if (this.refreshTimer !== null) {
+					window.clearTimeout(this.refreshTimer);
+				}
+				this.refreshTimer = window.setTimeout(() => {
+					this.refreshTimer = null;
+					for (const leaf of this.app.workspace.getLeavesOfType(OUTLINE_VIEW_TYPE)) {
+						if (leaf.view instanceof CalendarOutlineView) leaf.view.refreshData();
+					}
+				}, REFRESH_DEBOUNCE_MS);
+			}),
+		);
 	}
 
 	onunload(): void {
-		this.outlineView = null;
+		if (this.refreshTimer !== null) {
+			window.clearTimeout(this.refreshTimer);
+			this.refreshTimer = null;
+		}
 	}
 
 	async loadSettings(): Promise<void> {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			(await this.loadData()) as Partial<SingleFileCalendarSettings>,
-		);
+		const saved = (await this.loadData()) as Partial<SingleFileCalendarSettings> | null;
+		this.settings = normalizeSettings(saved);
 	}
 
 	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
-		// 刷新 outline view
-		if (this.outlineView) {
-			this.outlineView.refresh(this.settings);
+		for (const leaf of this.app.workspace.getLeavesOfType(OUTLINE_VIEW_TYPE)) {
+			if (leaf.view instanceof CalendarOutlineView) leaf.view.refresh(this.settings);
 		}
 	}
 
@@ -69,7 +84,7 @@ export default class SingleFileCalendarPlugin extends Plugin {
 		// 检查是否已存在
 		const existing = workspace.getLeavesOfType(OUTLINE_VIEW_TYPE);
 		if (existing.length > 0 && existing[0]) {
-			workspace.revealLeaf(existing[0]);
+			await workspace.revealLeaf(existing[0]);
 			return;
 		}
 
@@ -77,7 +92,51 @@ export default class SingleFileCalendarPlugin extends Plugin {
 		const leaf = workspace.getRightLeaf(false);
 		if (leaf) {
 			await leaf.setViewState({ type: OUTLINE_VIEW_TYPE, active: true });
-			workspace.revealLeaf(leaf);
+			await workspace.revealLeaf(leaf);
 		}
 	}
+}
+
+function normalizeSettings(saved: Partial<SingleFileCalendarSettings> | null): SingleFileCalendarSettings {
+	const data = saved ?? {};
+	const currentYear = new Date().getFullYear();
+	const startYear = Number.isInteger(data.startYear) && data.startYear! >= 1000 && data.startYear! <= 9999
+		? data.startYear!
+		: DEFAULT_SETTINGS.startYear;
+	const requestedEndYear = Number.isInteger(data.endYear) && data.endYear! >= 1000 && data.endYear! <= 9999
+		? data.endYear!
+		: DEFAULT_SETTINGS.endYear;
+
+	return {
+		calendarFilePath: typeof data.calendarFilePath === 'string' && data.calendarFilePath.trim()
+			? data.calendarFilePath.trim()
+			: DEFAULT_SETTINGS.calendarFilePath,
+		startYear,
+		endYear: Math.max(startYear, requestedEndYear || currentYear),
+		weekStartsOn: data.weekStartsOn === 'sunday' ? 'sunday' : 'monday',
+		language: data.language === 'zh' ? 'zh' : 'en',
+		showWeekNumber: typeof data.showWeekNumber === 'boolean'
+			? data.showWeekNumber
+			: DEFAULT_SETTINGS.showWeekNumber,
+		enabledStatsTags: Array.isArray(data.enabledStatsTags)
+			? data.enabledStatsTags.filter((tag): tag is string => typeof tag === 'string')
+			: [...DEFAULT_SETTINGS.enabledStatsTags],
+		visualizationTagMappings: data.visualizationTagMappings
+			? { ...data.visualizationTagMappings }
+			: { ...DEFAULT_SETTINGS.visualizationTagMappings },
+		yearSummaryCards: {
+			showRecordedDays: data.yearSummaryCards?.showRecordedDays
+				?? DEFAULT_SETTINGS.yearSummaryCards.showRecordedDays,
+			tags: {
+				...DEFAULT_SETTINGS.yearSummaryCards.tags,
+				...(data.yearSummaryCards?.tags ?? {}),
+			},
+		},
+		sidebarUiState: {
+			collapsibleSections: {
+				...DEFAULT_SETTINGS.sidebarUiState.collapsibleSections,
+				...(data.sidebarUiState?.collapsibleSections ?? {}),
+			},
+		},
+	};
 }

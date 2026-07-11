@@ -216,15 +216,23 @@ function buildDayBlocks(items: ParsedItem[], lines: string[]): CalendarDayBlock[
 
 		// 提取 ranges（日期范围）
 		const yearHint = item.yearContext ?? new Date().getFullYear();
-		const parsedRanges = parseRangesFromText(inlineContent, yearHint);
-		const ranges: CalendarRange[] = parsedRanges.map((r) => ({
-			startDate: r.startDate,
-			endDate: r.endDate,
-			sourceDate: item.date!,
-			text: r.rawText,
-			tags: [],   // 后续可关联
-			links: [],  // 后续可关联
-		}));
+		const ranges: CalendarRange[] = [];
+		for (const inlineItem of splitInlineItems(inlineContent)) {
+			const itemRanges = parseRangesFromText(inlineItem, yearHint);
+			if (itemRanges.length === 0) continue;
+			const itemTags = extractTags(inlineItem);
+			const itemLinks = extractLinks(inlineItem);
+			for (const r of itemRanges) {
+				ranges.push({
+					startDate: r.startDate,
+					endDate: r.endDate,
+					sourceDate: item.date,
+					text: r.rawText,
+					tags: itemTags,
+					links: itemLinks,
+				});
+			}
+		}
 
 		dayBlocks.push({
 			date: item.date,
@@ -243,6 +251,17 @@ function buildDayBlocks(items: ParsedItem[], lines: string[]): CalendarDayBlock[
 	}
 
 	return dayBlocks;
+}
+
+function splitInlineItems(text: string): string[] {
+	let normalized = text.trim();
+	if (normalized.startsWith('|') || normalized.startsWith('｜')) {
+		normalized = normalized.slice(1).trim();
+	}
+	return normalized
+		.split('；')
+		.map((item) => item.trim())
+		.filter((item) => item.length > 0);
 }
 
 /**

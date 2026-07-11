@@ -4,6 +4,8 @@
 	display: flex;
 	flex-direction: column;
 	height: 100%;
+	min-width: 0;
+	overflow-x: hidden;
 }
 
 /* ==================== Toolbar ==================== */
@@ -16,11 +18,20 @@
 	border-bottom: 1px solid var(--background-modifier-border);
 	gap: 8px;
 	flex-shrink: 0;
+	min-width: 0;
+	overflow-x: auto;
+	overflow-y: hidden;
+	scrollbar-width: none;
+}
+
+.sfc-toolbar::-webkit-scrollbar {
+	display: none;
 }
 
 .sfc-tab-group {
 	display: flex;
 	gap: 2px;
+	flex-shrink: 0;
 }
 
 .sfc-tab-btn {
@@ -69,6 +80,7 @@
 	color: var(--text-muted);
 	cursor: pointer;
 	font-size: 12px;
+	white-space: nowrap;
 }
 
 .sfc-btn:hover {
@@ -92,6 +104,8 @@
 .sfc-content {
 	flex: 1;
 	overflow-y: auto;
+	overflow-x: hidden;
+	min-width: 0;
 }
 
 .sfc-empty {
@@ -346,6 +360,7 @@
 	0% {
 		box-shadow: inset 0 0 0 100px rgba(255, 213, 79, 0.5), 0 0 0 1px rgba(255, 213, 79, 0.7);
 	}
+
 	100% {
 		box-shadow: inset 0 0 0 100px transparent, 0 0 0 1px transparent;
 	}
@@ -353,4 +368,893 @@
 
 .sfc-jump-flash {
 	animation: sfc-jump-flash 1.5s ease-out;
+}
+
+.sfc-bar-detail.is-hidden {
+	display: none;
+}
+
+/* ==================== Stats Tab ==================== */
+
+.sfc-stats-section {
+	border-bottom: 1px solid var(--background-modifier-border);
+	padding: 8px 0;
+}
+
+.sfc-stats-section:last-child {
+	border-bottom: none;
+}
+
+.sfc-stats-header {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	padding: 4px 12px;
+}
+
+.sfc-stats-title {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.sfc-stats-total {
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--text-muted);
+}
+
+.sfc-stats-section-body {
+	padding: 2px 0 4px;
+}
+
+/* Generic tag sections (location / simple): collapsible section header */
+.sfc-stats-header.is-collapsible {
+	cursor: pointer;
+	border-radius: 3px;
+}
+
+.sfc-stats-header.is-collapsible:hover {
+	background: var(--background-modifier-hover);
+}
+
+.sfc-stats-header.is-collapsible.is-expanded .sfc-stats-title::before {
+	content: '▾ ';
+	font-size: 10px;
+	margin-right: 4px;
+	color: var(--text-muted);
+}
+
+.sfc-stats-header.is-collapsible:not(.is-expanded) .sfc-stats-title::before {
+	content: '▸ ';
+	font-size: 10px;
+	margin-right: 4px;
+	color: var(--text-muted);
+}
+
+/* Fitness: expandable month rows */
+
+.sfc-stats-month-row {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	padding: 3px 12px;
+	cursor: pointer;
+	border-radius: 3px;
+}
+
+.sfc-stats-month-row:hover {
+	background: var(--background-modifier-hover);
+}
+
+.sfc-stats-month-row.is-expanded {
+	background: var(--background-modifier-active-hover);
+}
+
+.sfc-stats-month-row.is-expanded::before {
+	content: '▾';
+	font-size: 10px;
+	margin-right: 4px;
+	color: var(--text-muted);
+}
+
+.sfc-stats-month-row:not(.is-expanded)::before {
+	content: '▸';
+	font-size: 10px;
+	margin-right: 4px;
+	color: var(--text-muted);
+}
+
+.sfc-stats-month-key {
+	font-size: 12px;
+	color: var(--text-muted);
+	font-weight: 600;
+}
+
+.sfc-stats-month-count {
+	font-size: 12px;
+	color: var(--text-normal);
+}
+
+.sfc-stats-day-list {
+	padding: 2px 0 4px 20px;
+}
+
+/* Live / Flight / Travel items */
+
+.sfc-stats-item {
+	display: flex;
+	gap: 8px;
+	padding: 3px 12px;
+	cursor: pointer;
+	border-radius: 3px;
+	align-items: baseline;
+}
+
+.sfc-stats-item:hover {
+	background: var(--background-modifier-hover);
+}
+
+.sfc-stats-item.is-active {
+	background: var(--background-modifier-active-hover);
+	color: var(--text-normal);
+}
+
+.sfc-stats-item-date {
+	font-size: 12px;
+	color: var(--text-normal);
+	font-weight: 500;
+	white-space: nowrap;
+	flex-shrink: 0;
+	min-width: 90px;
+}
+
+.sfc-stats-item-text {
+	font-size: 12px;
+	color: var(--text-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Monthly Summary table */
+
+.sfc-table-scroll {
+	position: relative;
+	overflow-x: auto;
+	overflow-y: hidden;
+	max-width: 100%;
+	padding: 0 12px 4px;
+	scrollbar-width: none;
+	mask-image: linear-gradient(to right, #000 calc(100% - 18px), transparent);
+	-webkit-mask-image: linear-gradient(to right, #000 calc(100% - 18px), transparent);
+}
+
+.sfc-table-scroll::-webkit-scrollbar {
+	display: none;
+}
+
+.sfc-stats-table {
+	width: 100%;
+	min-width: max-content;
+	border-collapse: collapse;
+	font-size: 12px;
+	margin-top: 4px;
+	margin-right: 18px;
+}
+
+.sfc-stats-table th,
+.sfc-stats-table td {
+	padding: 4px 8px;
+	text-align: right;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.sfc-stats-table th {
+	color: var(--text-muted);
+	font-weight: 600;
+}
+
+.sfc-stats-table th:first-child,
+.sfc-stats-table td:first-child {
+	text-align: left;
+}
+
+.sfc-stats-table td {
+	color: var(--text-normal);
+}
+
+.sfc-stats-table tbody tr:hover {
+	background: var(--background-modifier-hover);
+}
+
+/* ==================== Settings: Stats tags checkbox list ==================== */
+
+.sfc-stats-tags-list {
+	padding: 0 12px 12px;
+}
+
+.sfc-stats-tags-loading {
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
+.sfc-stats-tag-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px 0;
+}
+
+.sfc-stats-tag-item input[type='checkbox'] {
+	margin: 0;
+}
+
+.sfc-stats-tag-item label {
+	font-size: 13px;
+	cursor: pointer;
+}
+
+/* ==================== Visualization Tag Mappings Settings ==================== */
+
+.sfc-vis-tags-container h4 {
+	margin: 12px 0 4px;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.sfc-viz-mapping-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 0;
+}
+
+.sfc-viz-mapping-tag {
+	font-size: 13px;
+	min-width: 100px;
+	color: var(--text-normal);
+}
+
+.sfc-viz-mapping-select {
+	font-size: 12px;
+	padding: 2px 6px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	min-width: 140px;
+}
+
+.sfc-viz-mapping-namelabel {
+	font-size: 12px;
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+
+.sfc-viz-mapping-displayname {
+	font-size: 12px;
+	padding: 2px 6px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	flex: 1;
+	max-width: 180px;
+}
+
+.sfc-viz-mapping-displayname:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* ==================== Heatmap Tab ==================== */
+
+.sfc-heatmap-toolbar {
+	align-items: center;
+}
+
+.sfc-heatmap-year-label {
+	font-size: 12px;
+	color: var(--text-muted);
+	font-weight: 600;
+}
+
+.sfc-heatmap-year-select {
+	padding: 3px 6px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 12px;
+}
+
+.sfc-heatmap-summary {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	padding: 4px 12px 6px;
+}
+
+.sfc-heatmap-year-tag {
+	font-size: 13px;
+	font-weight: 700;
+	color: var(--interactive-accent);
+}
+
+.sfc-heatmap-summary-text {
+	font-size: 11px;
+	color: var(--text-muted);
+}
+
+/* ---------- Fitness Heatmap grid ---------- */
+
+.sfc-heatmap-wrap {
+	overflow-x: auto;
+	overflow-y: hidden;
+	padding: 4px 12px 8px;
+	scrollbar-width: none;
+	mask-image: linear-gradient(to right, #000 calc(100% - 18px), transparent);
+	-webkit-mask-image: linear-gradient(to right, #000 calc(100% - 18px), transparent);
+}
+
+.sfc-heatmap-wrap::-webkit-scrollbar {
+	display: none;
+}
+
+.sfc-heatmap-grid {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: max-content;
+	padding-right: 18px;
+}
+
+.sfc-heatmap-month-labels {
+	display: flex;
+	gap: 2px;
+}
+
+.sfc-heatmap-dow-spacer {
+	width: 24px;
+	flex-shrink: 0;
+}
+
+.sfc-heatmap-months {
+	flex: 1;
+}
+
+.sfc-heatmap-months-inner {
+	display: flex;
+	gap: 2px;
+}
+
+.sfc-heatmap-month-label {
+	width: 11px;
+	font-size: 9px;
+	color: var(--text-muted);
+	line-height: 14px;
+	white-space: nowrap;
+	overflow: visible;
+	position: relative;
+	z-index: 1;
+}
+
+.sfc-heatmap-body {
+	display: flex;
+	gap: 2px;
+}
+
+.sfc-heatmap-col {
+	position: relative;
+}
+
+/* 月份分隔线：很淡的竖向线 */
+.sfc-heatmap-col.sfc-month-start::before {
+	content: '';
+	position: absolute;
+	left: -2px;
+	top: 0;
+	bottom: 0;
+	width: 1px;
+	background: var(--background-modifier-border);
+	opacity: 0.5;
+}
+
+.sfc-heatmap-dow {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	width: 24px;
+	flex-shrink: 0;
+}
+
+.sfc-heatmap-dow-label {
+	font-size: 9px;
+	color: var(--text-muted);
+	height: 11px;
+	line-height: 11px;
+	white-space: nowrap;
+}
+
+.sfc-heatmap-cells {
+	display: flex;
+	gap: 2px;
+}
+
+.sfc-heatmap-col {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.sfc-heatmap-cell {
+	width: 11px;
+	height: 11px;
+	border-radius: 2px;
+	background: var(--background-modifier-border);
+}
+
+.sfc-heatmap-cell-clickable {
+	cursor: pointer;
+	transition: transform 0.1s;
+}
+
+.sfc-heatmap-cell-clickable:hover {
+	transform: scale(1.4);
+	z-index: 1;
+}
+
+/* 强度色阶（绿色系，类似 GitHub） */
+.sfc-heat-level-0 {
+	background: var(--background-modifier-border);
+}
+
+.sfc-heat-level-1 {
+	background: rgba(46, 160, 67, 0.4);
+}
+
+.sfc-heat-level-2 {
+	background: rgba(46, 160, 67, 0.6);
+}
+
+.sfc-heat-level-3 {
+	background: rgba(46, 160, 67, 0.8);
+}
+
+.sfc-heat-level-4 {
+	background: rgba(46, 160, 67, 1);
+}
+
+.sfc-heatmap-legend {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 0 12px 8px;
+	font-size: 10px;
+	color: var(--text-muted);
+}
+
+.sfc-heatmap-legend-text {
+	font-size: 10px;
+}
+
+.sfc-heatmap-legend-cells {
+	display: flex;
+	gap: 2px;
+}
+
+.sfc-heatmap-legend-cells .sfc-heatmap-cell {
+	width: 11px;
+	height: 11px;
+}
+
+/* ---------- Live Timeline ---------- */
+
+.sfc-timeline-month {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 3px 12px;
+}
+
+.sfc-timeline-month-label {
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text-muted);
+	width: 32px;
+	flex-shrink: 0;
+	padding-top: 2px;
+}
+
+.sfc-timeline-items {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.sfc-timeline-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px 6px;
+	cursor: pointer;
+	border-radius: 3px;
+}
+
+.sfc-timeline-item:hover {
+	background: var(--background-modifier-hover);
+}
+
+.sfc-timeline-marker {
+	flex-shrink: 0;
+}
+
+.sfc-timeline-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--interactive-accent);
+}
+
+.sfc-timeline-range {
+	width: 16px;
+	height: 6px;
+	border-radius: 3px;
+	background: var(--interactive-accent);
+}
+
+.sfc-timeline-info {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	flex: 1;
+	min-width: 0;
+}
+
+.sfc-timeline-name {
+	font-size: 12px;
+	color: var(--text-normal);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sfc-timeline-date {
+	font-size: 11px;
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+
+.sfc-timeline-duration {
+	font-size: 10px;
+	color: var(--text-faint);
+	padding: 1px 4px;
+	border-radius: 8px;
+	background: var(--background-modifier-hover);
+}
+
+/* ---------- Flight Distribution bar chart ---------- */
+
+.sfc-bar-chart {
+	padding: 8px 12px 4px;
+}
+
+.sfc-bar-row {
+	display: flex;
+	gap: 3px;
+	align-items: flex-end;
+	height: 80px;
+}
+
+.sfc-bar-col {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 3px;
+	height: 100%;
+}
+
+.sfc-bar-wrap {
+	flex: 1;
+	display: flex;
+	align-items: flex-end;
+	width: 100%;
+	height: 100%;
+}
+
+.sfc-bar {
+	width: 100%;
+	min-height: 2px;
+	background: var(--interactive-accent);
+	border-radius: 2px 2px 0 0;
+	cursor: pointer;
+	transition: opacity 0.15s;
+}
+
+.sfc-bar:hover {
+	opacity: 0.8;
+}
+
+.sfc-bar-empty {
+	background: var(--background-modifier-border);
+	cursor: default;
+}
+
+.sfc-bar-empty:hover {
+	opacity: 1;
+}
+
+.sfc-bar-label {
+	font-size: 10px;
+	color: var(--text-muted);
+	text-align: center;
+	white-space: nowrap;
+}
+
+.sfc-bar-detail {
+	padding: 4px 12px 8px;
+}
+
+.sfc-bar-detail-month {
+	border-top: 1px solid var(--background-modifier-border);
+	padding-top: 4px;
+}
+
+.sfc-bar-detail-header {
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text-muted);
+	padding: 2px 0 4px;
+}
+
+/* ---------- Travel Range View ---------- */
+
+.sfc-range-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 12px;
+	cursor: pointer;
+	border-radius: 3px;
+}
+
+.sfc-range-row:hover {
+	background: var(--background-modifier-hover);
+}
+
+.sfc-range-date {
+	font-size: 11px;
+	color: var(--text-normal);
+	font-weight: 500;
+	white-space: nowrap;
+	flex-shrink: 0;
+	min-width: 96px;
+}
+
+.sfc-range-bar-col {
+	flex: 1;
+	display: flex;
+}
+
+.sfc-range-bar {
+	height: 16px;
+	border-radius: 3px;
+	background: var(--interactive-accent);
+	display: flex;
+	align-items: center;
+	padding: 0 6px;
+	min-width: 8px;
+}
+
+.sfc-range-place {
+	font-size: 10px;
+	color: var(--text-on-accent);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sfc-range-duration {
+	font-size: 10px;
+	color: var(--text-muted);
+	flex-shrink: 0;
+	white-space: nowrap;
+}
+
+/* ==================== Year Tab ==================== */
+
+.sfc-year-toolbar {
+	align-items: center;
+}
+
+.sfc-year-label {
+	font-size: 12px;
+	color: var(--text-muted);
+	font-weight: 600;
+}
+
+.sfc-year-select {
+	padding: 3px 6px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 12px;
+}
+
+.sfc-year-section {
+	border-bottom: 1px solid var(--background-modifier-border);
+	padding: 8px 0;
+}
+
+.sfc-year-section:last-child {
+	border-bottom: none;
+}
+
+.sfc-year-section-title {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text-normal);
+	padding: 4px 12px;
+}
+
+.sfc-year-section-body {
+	padding: 2px 12px 4px;
+}
+
+/* ---------- Summary Cards ---------- */
+
+.sfc-year-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+	gap: 8px;
+	padding: 4px 0;
+}
+
+.sfc-year-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 10px 4px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background: var(--background-secondary);
+}
+
+.sfc-year-card-value {
+	font-size: 1.6em;
+	font-weight: 700;
+	color: var(--interactive-accent);
+	line-height: 1.1;
+}
+
+.sfc-year-card-label {
+	font-size: 10px;
+	color: var(--text-muted);
+	margin-top: 4px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	text-align: center;
+	line-height: 1.2;
+}
+
+/* ---------- Year Timeline ---------- */
+
+.sfc-year-timeline {
+	padding: 2px 0;
+}
+
+.sfc-year-month {
+	border-left: 2px solid var(--background-modifier-border);
+	margin-left: 4px;
+	padding-left: 10px;
+	margin-bottom: 6px;
+}
+
+.sfc-year-month-title {
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--text-normal);
+	margin-bottom: 2px;
+}
+
+.sfc-year-event {
+	display: flex;
+	gap: 8px;
+	padding: 3px 6px;
+	cursor: pointer;
+	border-radius: 3px;
+	align-items: baseline;
+}
+
+.sfc-year-event:hover {
+	background: var(--background-modifier-hover);
+}
+
+.sfc-year-event.is-active {
+	background: var(--background-modifier-active-hover);
+	color: var(--text-normal);
+}
+
+.sfc-year-event-date {
+	font-size: 12px;
+	color: var(--text-normal);
+	font-weight: 500;
+	white-space: nowrap;
+	flex-shrink: 0;
+	min-width: 96px;
+}
+
+.sfc-year-event-tag {
+	font-size: 10px;
+	font-weight: 600;
+	color: var(--text-on-accent);
+	background: var(--interactive-accent);
+	border-radius: 3px;
+	padding: 1px 6px;
+	flex-shrink: 0;
+	white-space: nowrap;
+}
+
+.sfc-year-event-text {
+	font-size: 12px;
+	color: var(--text-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* ---------- Year Data Overview ---------- */
+
+.sfc-year-overview-table {
+	margin: 4px 0 8px;
+}
+
+.sfc-year-subtitle {
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	margin: 10px 0 2px;
+}
+
+.sfc-year-tag-totals {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px 12px;
+	padding: 4px 0;
+	margin-top: 6px;
+}
+
+.sfc-year-tag-total {
+	display: flex;
+	align-items: baseline;
+	gap: 4px;
+	padding: 2px 8px;
+	border-radius: 4px;
+	background: var(--background-secondary);
+}
+
+.sfc-year-tag-total-name {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.sfc-year-tag-total-count {
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--interactive-accent);
+}
+
+/* ---------- Year Summary Settings ---------- */
+
+.sfc-year-settings-tags {
+	margin-top: 8px;
 }
