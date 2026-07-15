@@ -15,6 +15,9 @@ main.js
 # Exclude sourcemaps
 *.map
 
+# Temporary mobile test output
+dist-mobile/
+
 # obsidian
 data.json
 
