@@ -63,17 +63,6 @@ Multiple tags are allowed on the same date. Text following the tags is treated a
 - **Add item to today**: Insert a record on today's date.
 - **Migrate to latest format**: Convert legacy nested structures to the inline format.
 
-## Development
-
-```bash
-npm install
-npm run build
-npm run lint
-npm test
-```
-
-The build generates `main.js` in the repository root. For a GitHub release, upload `main.js`, `manifest.json`, and `styles.css` as release assets.
-
 ## Compatibility
 
 - Minimum Obsidian version: `1.7.2`
@@ -82,4 +71,3 @@ The build generates `main.js` in the repository root. For a GitHub release, uplo
 ## Feedback
 
 Please open an issue in the GitHub repository and include your Obsidian version, plugin version, a small `Calendar.md` example, and any console errors.
-
