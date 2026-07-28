@@ -5,7 +5,7 @@ import { createCalendarFile, insertItemToDate, appendYearToCalendar, migrateToLa
 import { navigateToCalendarLine } from './navigator';
 import { getTodayStr, normalizeDate } from './date-utils';
 import { confirmAction } from './confirm-modal';
-import type { SingleFileCalendarSettings } from './types';
+import type { CalendarLedgerSettings } from './types';
 
 type PluginWithSettings = Plugin & {
 	saveSettings: () => Promise<void>;
@@ -13,8 +13,8 @@ type PluginWithSettings = Plugin & {
 
 export function registerCommands(
 	plugin: Plugin,
-	settings: SingleFileCalendarSettings,
-	getSettings: () => SingleFileCalendarSettings,
+	settings: CalendarLedgerSettings,
+	getSettings: () => CalendarLedgerSettings,
 ) {
 	// 1. 生成日历
 	plugin.addCommand({
@@ -115,7 +115,7 @@ export function registerCommands(
 							await navigateToCalendarLine(plugin, s.calendarFilePath, result.line, result.title);
 							new Notice(`已添加记录到 ${dateStr}。`);
 						}
-					})().catch((error) => console.error('[SFC] Add item error:', error));
+					})().catch((error) => console.error('[Calendar Ledger] Add item error:', error));
 				}).open();
 			}).open();
 		},
@@ -136,7 +136,7 @@ export function registerCommands(
 						await navigateToCalendarLine(plugin, s.calendarFilePath, result.line, result.title);
 						new Notice(`已添加记录到今天（${today}）。`);
 					}
-				})().catch((error) => console.error('[SFC] Add today item error:', error));
+				})().catch((error) => console.error('[Calendar Ledger] Add today item error:', error));
 			}).open();
 		},
 	});
@@ -161,7 +161,7 @@ export function registerCommands(
  * 解析 Calendar.md 找到目标日期的行号，委托给 navigator 完成跳转。
  * navigator 会保留用户当前模式（阅读 / 源码），并居中 + 闪烁高亮。
  */
-async function jumpToDate(plugin: Plugin, settings: SingleFileCalendarSettings, dateStr: string): Promise<void> {
+async function jumpToDate(plugin: Plugin, settings: CalendarLedgerSettings, dateStr: string): Promise<void> {
 	const file = plugin.app.vault.getFileByPath(settings.calendarFilePath);
 	if (!file) {
 		new Notice(`找不到日历文件：${settings.calendarFilePath}`);

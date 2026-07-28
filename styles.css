@@ -1,6 +1,6 @@
-/* Single File Calendar */
+/* Calendar Ledger */
 
-.single-file-calendar-outline {
+.calendar-ledger-outline {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
@@ -10,7 +10,7 @@
 
 /* ==================== Toolbar ==================== */
 
-.sfc-toolbar {
+.calendar-ledger-toolbar {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -24,17 +24,17 @@
 	scrollbar-width: none;
 }
 
-.sfc-toolbar::-webkit-scrollbar {
+.calendar-ledger-toolbar::-webkit-scrollbar {
 	display: none;
 }
 
-.sfc-tab-group {
+.calendar-ledger-tab-group {
 	display: flex;
 	gap: 2px;
 	flex-shrink: 0;
 }
 
-.sfc-tab-btn {
+.calendar-ledger-tab-btn {
 	padding: 4px 12px;
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 5px;
@@ -46,25 +46,25 @@
 	transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.sfc-tab-btn:hover {
+.calendar-ledger-tab-btn:hover {
 	background: var(--background-modifier-hover);
 	color: var(--text-normal);
 }
 
-.sfc-tab-active {
+.calendar-ledger-tab-active {
 	background: var(--interactive-accent);
 	color: var(--text-on-accent);
 	border-color: var(--interactive-accent);
 }
 
-.sfc-tab-active:hover {
+.calendar-ledger-tab-active:hover {
 	background: var(--interactive-accent-hover);
 	color: var(--text-on-accent);
 }
 
 /* ==================== Sub Toolbar ==================== */
 
-.sfc-subtoolbar {
+.calendar-ledger-subtoolbar {
 	display: flex;
 	gap: 4px;
 	padding: 6px 12px;
@@ -72,7 +72,7 @@
 	flex-shrink: 0;
 }
 
-.sfc-btn {
+.calendar-ledger-btn {
 	padding: 3px 10px;
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 4px;
@@ -83,32 +83,32 @@
 	white-space: nowrap;
 }
 
-.sfc-btn:hover {
+.calendar-ledger-btn:hover {
 	background: var(--background-modifier-hover);
 	color: var(--text-normal);
 }
 
-.sfc-btn-active {
+.calendar-ledger-btn-active {
 	background: var(--interactive-accent);
 	color: var(--text-on-accent);
 	border-color: var(--interactive-accent);
 }
 
-.sfc-btn-active:hover {
+.calendar-ledger-btn-active:hover {
 	background: var(--interactive-accent-hover);
 	color: var(--text-on-accent);
 }
 
 /* ==================== Content ==================== */
 
-.sfc-content {
+.calendar-ledger-content {
 	flex: 1;
 	overflow-y: auto;
 	overflow-x: hidden;
 	min-width: 0;
 }
 
-.sfc-empty {
+.calendar-ledger-empty {
 	padding: 24px 16px;
 	color: var(--text-muted);
 	text-align: center;
@@ -117,47 +117,47 @@
 
 /* ==================== Tree (Calendar Tab) ==================== */
 
-.sfc-tree {
+.calendar-ledger-tree {
 	padding: 4px 0;
 }
 
-.sfc-node {
+.calendar-ledger-node {
 	padding: 2px 12px;
 	cursor: pointer;
 	border-radius: 3px;
 }
 
-.sfc-node:hover {
+.calendar-ledger-node:hover {
 	background: var(--background-modifier-hover);
 }
 
-.sfc-node-title {
+.calendar-ledger-node-title {
 	font-size: 13px;
 	color: var(--text-normal);
 }
 
-.sfc-children {
+.calendar-ledger-children {
 	padding-left: 16px;
 }
 
 /* ==================== List (Content / Upcoming Tab) ==================== */
 
-.sfc-list {
+.calendar-ledger-list {
 	padding: 4px 0;
 }
 
-.sfc-list-month {
+.calendar-ledger-list-month {
 	padding: 8px 12px 4px;
 }
 
-.sfc-list-month-title {
+.calendar-ledger-list-month-title {
 	font-size: 12px;
 	font-weight: 600;
 	color: var(--text-muted);
 	text-transform: uppercase;
 }
 
-.sfc-list-row {
+.calendar-ledger-list-row {
 	display: flex;
 	gap: 8px;
 	padding: 3px 12px;
@@ -166,21 +166,21 @@
 	align-items: baseline;
 }
 
-.sfc-list-row:hover {
+.calendar-ledger-list-row:hover {
 	background: var(--background-modifier-hover);
 }
 
-.sfc-list-row.is-active {
+.calendar-ledger-list-row.is-active {
 	background: var(--background-modifier-active-hover);
 	color: var(--text-normal);
 }
 
-.sfc-list-row.is-active .sfc-list-date {
+.calendar-ledger-list-row.is-active .calendar-ledger-list-date {
 	color: var(--text-normal);
 	font-weight: 600;
 }
 
-.sfc-list-date {
+.calendar-ledger-list-date {
 	font-size: 13px;
 	color: var(--text-normal);
 	font-weight: 500;
@@ -188,7 +188,7 @@
 	flex-shrink: 0;
 }
 
-.sfc-list-content {
+.calendar-ledger-list-content {
 	font-size: 12px;
 	color: var(--text-muted);
 	overflow: hidden;
@@ -198,14 +198,14 @@
 
 /* ==================== Inline Tabs (Calendar.md 内嵌) ==================== */
 
-.sfc-inline-container {
+.calendar-ledger-inline-container {
 	margin: 16px 0;
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 8px;
 	overflow: hidden;
 }
 
-.sfc-inline-tabbar {
+.calendar-ledger-inline-tabbar {
 	display: flex;
 	align-items: center;
 	gap: 2px;
@@ -213,7 +213,7 @@
 	border-bottom: 1px solid var(--background-modifier-border);
 }
 
-.sfc-inline-tab-btn {
+.calendar-ledger-inline-tab-btn {
 	padding: 5px 12px;
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 5px;
@@ -225,32 +225,32 @@
 	transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.sfc-inline-tab-btn:hover {
+.calendar-ledger-inline-tab-btn:hover {
 	background: var(--background-modifier-hover);
 	color: var(--text-normal);
 }
 
-.sfc-inline-tab-active {
+.calendar-ledger-inline-tab-active {
 	background: var(--interactive-accent);
 	color: var(--text-on-accent);
 	border-color: var(--interactive-accent);
 }
 
-.sfc-inline-tab-active:hover {
+.calendar-ledger-inline-tab-active:hover {
 	background: var(--interactive-accent-hover);
 	color: var(--text-on-accent);
 }
 
 /* Level buttons (in tab bar) */
 
-.sfc-inline-levels {
+.calendar-ledger-inline-levels {
 	display: flex;
 	gap: 4px;
 	margin-left: auto;
 	padding: 4px 8px;
 }
 
-.sfc-inline-level-btn {
+.calendar-ledger-inline-level-btn {
 	padding: 2px 8px;
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 4px;
@@ -260,25 +260,25 @@
 	font-size: 11px;
 }
 
-.sfc-inline-level-btn:hover {
+.calendar-ledger-inline-level-btn:hover {
 	background: var(--background-modifier-hover);
 	color: var(--text-normal);
 }
 
-.sfc-inline-level-active {
+.calendar-ledger-inline-level-active {
 	background: var(--interactive-accent);
 	color: var(--text-on-accent);
 	border-color: var(--interactive-accent);
 }
 
-.sfc-inline-level-active:hover {
+.calendar-ledger-inline-level-active:hover {
 	background: var(--interactive-accent-hover);
 	color: var(--text-on-accent);
 }
 
 /* Content area */
 
-.sfc-inline-content {
+.calendar-ledger-inline-content {
 	padding: 8px 0;
 	max-height: 500px;
 	overflow-y: auto;
@@ -286,39 +286,39 @@
 
 /* Tree (Calendar Tab) */
 
-.sfc-inline-node {
+.calendar-ledger-inline-node {
 	padding: 2px 12px;
 	cursor: default;
 	border-radius: 3px;
 	font-size: 13px;
 }
 
-.sfc-inline-node:hover {
+.calendar-ledger-inline-node:hover {
 	background: var(--background-modifier-hover);
 }
 
-.sfc-inline-clickable {
+.calendar-ledger-inline-clickable {
 	cursor: pointer;
 }
 
-.sfc-inline-node-title {
+.calendar-ledger-inline-node-title {
 	color: var(--text-normal);
 }
 
 /* List (Content / Upcoming Tabs) */
 
-.sfc-inline-month {
+.calendar-ledger-inline-month {
 	padding: 8px 12px 4px;
 }
 
-.sfc-inline-month-title {
+.calendar-ledger-inline-month-title {
 	font-size: 12px;
 	font-weight: 600;
 	color: var(--text-muted);
 	text-transform: uppercase;
 }
 
-.sfc-inline-row {
+.calendar-ledger-inline-row {
 	display: flex;
 	gap: 8px;
 	padding: 3px 12px;
@@ -327,11 +327,11 @@
 	align-items: baseline;
 }
 
-.sfc-inline-row:hover {
+.calendar-ledger-inline-row:hover {
 	background: var(--background-modifier-hover);
 }
 
-.sfc-inline-date {
+.calendar-ledger-inline-date {
 	font-size: 13px;
 	color: var(--text-normal);
 	font-weight: 500;
@@ -339,7 +339,7 @@
 	flex-shrink: 0;
 }
 
-.sfc-inline-desc {
+.calendar-ledger-inline-desc {
 	font-size: 12px;
 	color: var(--text-muted);
 	overflow: hidden;
@@ -347,7 +347,7 @@
 	white-space: nowrap;
 }
 
-.sfc-inline-empty {
+.calendar-ledger-inline-empty {
 	padding: 24px 16px;
 	color: var(--text-muted);
 	text-align: center;
@@ -356,7 +356,7 @@
 
 /* ==================== Jump Flash (跳转高亮) ==================== */
 
-@keyframes sfc-jump-flash {
+@keyframes calendar-ledger-jump-flash {
 	0% {
 		box-shadow: inset 0 0 0 100px rgba(255, 213, 79, 0.5), 0 0 0 1px rgba(255, 213, 79, 0.7);
 	}
@@ -366,66 +366,66 @@
 	}
 }
 
-.sfc-jump-flash {
-	animation: sfc-jump-flash 1.5s ease-out;
+.calendar-ledger-jump-flash {
+	animation: calendar-ledger-jump-flash 1.5s ease-out;
 }
 
-.sfc-bar-detail.is-hidden {
+.calendar-ledger-bar-detail.is-hidden {
 	display: none;
 }
 
 /* ==================== Stats Tab ==================== */
 
-.sfc-stats-section {
+.calendar-ledger-stats-section {
 	border-bottom: 1px solid var(--background-modifier-border);
 	padding: 8px 0;
 }
 
-.sfc-stats-section:last-child {
+.calendar-ledger-stats-section:last-child {
 	border-bottom: none;
 }
 
-.sfc-stats-header {
+.calendar-ledger-stats-header {
 	display: flex;
 	align-items: baseline;
 	justify-content: space-between;
 	padding: 4px 12px;
 }
 
-.sfc-stats-title {
+.calendar-ledger-stats-title {
 	font-size: 13px;
 	font-weight: 600;
 	color: var(--text-normal);
 }
 
-.sfc-stats-total {
+.calendar-ledger-stats-total {
 	font-size: 12px;
 	font-weight: 500;
 	color: var(--text-muted);
 }
 
-.sfc-stats-section-body {
+.calendar-ledger-stats-section-body {
 	padding: 2px 0 4px;
 }
 
 /* Generic tag sections (location / simple): collapsible section header */
-.sfc-stats-header.is-collapsible {
+.calendar-ledger-stats-header.is-collapsible {
 	cursor: pointer;
 	border-radius: 3px;
 }
 
-.sfc-stats-header.is-collapsible:hover {
+.calendar-ledger-stats-header.is-collapsible:hover {
 	background: var(--background-modifier-hover);
 }
 
-.sfc-stats-header.is-collapsible.is-expanded .sfc-stats-title::before {
+.calendar-ledger-stats-header.is-collapsible.is-expanded .calendar-ledger-stats-title::before {
 	content: '▾ ';
 	font-size: 10px;
 	margin-right: 4px;
 	color: var(--text-muted);
 }
 
-.sfc-stats-header.is-collapsible:not(.is-expanded) .sfc-stats-title::before {
+.calendar-ledger-stats-header.is-collapsible:not(.is-expanded) .calendar-ledger-stats-title::before {
 	content: '▸ ';
 	font-size: 10px;
 	margin-right: 4px;
@@ -434,7 +434,7 @@
 
 /* Fitness: expandable month rows */
 
-.sfc-stats-month-row {
+.calendar-ledger-stats-month-row {
 	display: flex;
 	align-items: baseline;
 	justify-content: space-between;
@@ -443,46 +443,46 @@
 	border-radius: 3px;
 }
 
-.sfc-stats-month-row:hover {
+.calendar-ledger-stats-month-row:hover {
 	background: var(--background-modifier-hover);
 }
 
-.sfc-stats-month-row.is-expanded {
+.calendar-ledger-stats-month-row.is-expanded {
 	background: var(--background-modifier-active-hover);
 }
 
-.sfc-stats-month-row.is-expanded::before {
+.calendar-ledger-stats-month-row.is-expanded::before {
 	content: '▾';
 	font-size: 10px;
 	margin-right: 4px;
 	color: var(--text-muted);
 }
 
-.sfc-stats-month-row:not(.is-expanded)::before {
+.calendar-ledger-stats-month-row:not(.is-expanded)::before {
 	content: '▸';
 	font-size: 10px;
 	margin-right: 4px;
 	color: var(--text-muted);
 }
 
-.sfc-stats-month-key {
+.calendar-ledger-stats-month-key {
 	font-size: 12px;
 	color: var(--text-muted);
 	font-weight: 600;
 }
 
-.sfc-stats-month-count {
+.calendar-ledger-stats-month-count {
 	font-size: 12px;
 	color: var(--text-normal);
 }
 
-.sfc-stats-day-list {
+.calendar-ledger-stats-day-list {
 	padding: 2px 0 4px 20px;
 }
 
 /* Live / Flight / Travel items */
 
-.sfc-stats-item {
+.calendar-ledger-stats-item {
 	display: flex;
 	gap: 8px;
 	padding: 3px 12px;
@@ -491,16 +491,16 @@
 	align-items: baseline;
 }
 
-.sfc-stats-item:hover {
+.calendar-ledger-stats-item:hover {
 	background: var(--background-modifier-hover);
 }
 
-.sfc-stats-item.is-active {
+.calendar-ledger-stats-item.is-active {
 	background: var(--background-modifier-active-hover);
 	color: var(--text-normal);
 }
 
-.sfc-stats-item-date {
+.calendar-ledger-stats-item-date {
 	font-size: 12px;
 	color: var(--text-normal);
 	font-weight: 500;
@@ -509,7 +509,7 @@
 	min-width: 90px;
 }
 
-.sfc-stats-item-text {
+.calendar-ledger-stats-item-text {
 	font-size: 12px;
 	color: var(--text-muted);
 	overflow: hidden;
@@ -519,7 +519,7 @@
 
 /* Monthly Summary table */
 
-.sfc-table-scroll {
+.calendar-ledger-table-scroll {
 	position: relative;
 	overflow-x: auto;
 	overflow-y: hidden;
@@ -530,11 +530,11 @@
 	-webkit-mask-image: linear-gradient(to right, #000 calc(100% - 18px), transparent);
 }
 
-.sfc-table-scroll::-webkit-scrollbar {
+.calendar-ledger-table-scroll::-webkit-scrollbar {
 	display: none;
 }
 
-.sfc-stats-table {
+.calendar-ledger-stats-table {
 	width: 100%;
 	min-width: max-content;
 	border-collapse: collapse;
@@ -543,81 +543,81 @@
 	margin-right: 18px;
 }
 
-.sfc-stats-table th,
-.sfc-stats-table td {
+.calendar-ledger-stats-table th,
+.calendar-ledger-stats-table td {
 	padding: 4px 8px;
 	text-align: right;
 	border-bottom: 1px solid var(--background-modifier-border);
 }
 
-.sfc-stats-table th {
+.calendar-ledger-stats-table th {
 	color: var(--text-muted);
 	font-weight: 600;
 }
 
-.sfc-stats-table th:first-child,
-.sfc-stats-table td:first-child {
+.calendar-ledger-stats-table th:first-child,
+.calendar-ledger-stats-table td:first-child {
 	text-align: left;
 }
 
-.sfc-stats-table td {
+.calendar-ledger-stats-table td {
 	color: var(--text-normal);
 }
 
-.sfc-stats-table tbody tr:hover {
+.calendar-ledger-stats-table tbody tr:hover {
 	background: var(--background-modifier-hover);
 }
 
 /* ==================== Settings: Stats tags checkbox list ==================== */
 
-.sfc-stats-tags-list {
+.calendar-ledger-stats-tags-list {
 	padding: 0 12px 12px;
 }
 
-.sfc-stats-tags-loading {
+.calendar-ledger-stats-tags-loading {
 	font-size: 12px;
 	color: var(--text-muted);
 }
 
-.sfc-stats-tag-item {
+.calendar-ledger-stats-tag-item {
 	display: flex;
 	align-items: center;
 	gap: 6px;
 	padding: 3px 0;
 }
 
-.sfc-stats-tag-item input[type='checkbox'] {
+.calendar-ledger-stats-tag-item input[type='checkbox'] {
 	margin: 0;
 }
 
-.sfc-stats-tag-item label {
+.calendar-ledger-stats-tag-item label {
 	font-size: 13px;
 	cursor: pointer;
 }
 
 /* ==================== Visualization Tag Mappings Settings ==================== */
 
-.sfc-vis-tags-container h4 {
+.calendar-ledger-vis-tags-container h4 {
 	margin: 12px 0 4px;
 	font-size: 13px;
 	font-weight: 600;
 	color: var(--text-normal);
 }
 
-.sfc-viz-mapping-row {
+.calendar-ledger-viz-mapping-row {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 	padding: 4px 0;
 }
 
-.sfc-viz-mapping-tag {
+.calendar-ledger-viz-mapping-tag {
 	font-size: 13px;
 	min-width: 100px;
 	color: var(--text-normal);
 }
 
-.sfc-viz-mapping-select {
+.calendar-ledger-viz-mapping-select {
 	font-size: 12px;
 	padding: 2px 6px;
 	border: 1px solid var(--background-modifier-border);
@@ -627,13 +627,13 @@
 	min-width: 140px;
 }
 
-.sfc-viz-mapping-namelabel {
+.calendar-ledger-viz-mapping-namelabel {
 	font-size: 12px;
 	color: var(--text-muted);
 	white-space: nowrap;
 }
 
-.sfc-viz-mapping-displayname {
+.calendar-ledger-viz-mapping-displayname {
 	font-size: 12px;
 	padding: 2px 6px;
 	border: 1px solid var(--background-modifier-border);
@@ -644,24 +644,24 @@
 	max-width: 180px;
 }
 
-.sfc-viz-mapping-displayname:disabled {
+.calendar-ledger-viz-mapping-displayname:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
 
 /* ==================== Heatmap Tab ==================== */
 
-.sfc-heatmap-toolbar {
+.calendar-ledger-heatmap-toolbar {
 	align-items: center;
 }
 
-.sfc-heatmap-year-label {
+.calendar-ledger-heatmap-year-label {
 	font-size: 12px;
 	color: var(--text-muted);
 	font-weight: 600;
 }
 
-.sfc-heatmap-year-select {
+.calendar-ledger-heatmap-year-select {
 	padding: 3px 6px;
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 4px;
@@ -670,27 +670,27 @@
 	font-size: 12px;
 }
 
-.sfc-heatmap-summary {
+.calendar-ledger-heatmap-summary {
 	display: flex;
 	align-items: baseline;
 	gap: 8px;
 	padding: 4px 12px 6px;
 }
 
-.sfc-heatmap-year-tag {
+.calendar-ledger-heatmap-year-tag {
 	font-size: 13px;
 	font-weight: 700;
 	color: var(--interactive-accent);
 }
 
-.sfc-heatmap-summary-text {
+.calendar-ledger-heatmap-summary-text {
 	font-size: 11px;
 	color: var(--text-muted);
 }
 
 /* ---------- Fitness Heatmap grid ---------- */
 
-.sfc-heatmap-wrap {
+.calendar-ledger-heatmap-wrap {
 	overflow-x: auto;
 	overflow-y: hidden;
 	padding: 4px 12px 8px;
@@ -699,11 +699,11 @@
 	-webkit-mask-image: linear-gradient(to right, #000 calc(100% - 18px), transparent);
 }
 
-.sfc-heatmap-wrap::-webkit-scrollbar {
+.calendar-ledger-heatmap-wrap::-webkit-scrollbar {
 	display: none;
 }
 
-.sfc-heatmap-grid {
+.calendar-ledger-heatmap-grid {
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
@@ -711,26 +711,26 @@
 	padding-right: 18px;
 }
 
-.sfc-heatmap-month-labels {
+.calendar-ledger-heatmap-month-labels {
 	display: flex;
 	gap: 2px;
 }
 
-.sfc-heatmap-dow-spacer {
+.calendar-ledger-heatmap-dow-spacer {
 	width: 24px;
 	flex-shrink: 0;
 }
 
-.sfc-heatmap-months {
+.calendar-ledger-heatmap-months {
 	flex: 1;
 }
 
-.sfc-heatmap-months-inner {
+.calendar-ledger-heatmap-months-inner {
 	display: flex;
 	gap: 2px;
 }
 
-.sfc-heatmap-month-label {
+.calendar-ledger-heatmap-month-label {
 	width: 11px;
 	font-size: 9px;
 	color: var(--text-muted);
@@ -741,17 +741,17 @@
 	z-index: 1;
 }
 
-.sfc-heatmap-body {
+.calendar-ledger-heatmap-body {
 	display: flex;
 	gap: 2px;
 }
 
-.sfc-heatmap-col {
+.calendar-ledger-heatmap-col {
 	position: relative;
 }
 
 /* 月份分隔线：很淡的竖向线 */
-.sfc-heatmap-col.sfc-month-start::before {
+.calendar-ledger-heatmap-col.calendar-ledger-month-start::before {
 	content: '';
 	position: absolute;
 	left: -2px;
@@ -762,7 +762,7 @@
 	opacity: 0.5;
 }
 
-.sfc-heatmap-dow {
+.calendar-ledger-heatmap-dow {
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
@@ -770,7 +770,7 @@
 	flex-shrink: 0;
 }
 
-.sfc-heatmap-dow-label {
+.calendar-ledger-heatmap-dow-label {
 	font-size: 9px;
 	color: var(--text-muted);
 	height: 11px;
@@ -778,56 +778,56 @@
 	white-space: nowrap;
 }
 
-.sfc-heatmap-cells {
+.calendar-ledger-heatmap-cells {
 	display: flex;
 	gap: 2px;
 }
 
-.sfc-heatmap-col {
+.calendar-ledger-heatmap-col {
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
 }
 
-.sfc-heatmap-cell {
+.calendar-ledger-heatmap-cell {
 	width: 11px;
 	height: 11px;
 	border-radius: 2px;
 	background: var(--background-modifier-border);
 }
 
-.sfc-heatmap-cell-clickable {
+.calendar-ledger-heatmap-cell-clickable {
 	cursor: pointer;
 	transition: transform 0.1s;
 }
 
-.sfc-heatmap-cell-clickable:hover {
+.calendar-ledger-heatmap-cell-clickable:hover {
 	transform: scale(1.4);
 	z-index: 1;
 }
 
 /* 强度色阶（绿色系，类似 GitHub） */
-.sfc-heat-level-0 {
+.calendar-ledger-heat-level-0 {
 	background: var(--background-modifier-border);
 }
 
-.sfc-heat-level-1 {
+.calendar-ledger-heat-level-1 {
 	background: rgba(46, 160, 67, 0.4);
 }
 
-.sfc-heat-level-2 {
+.calendar-ledger-heat-level-2 {
 	background: rgba(46, 160, 67, 0.6);
 }
 
-.sfc-heat-level-3 {
+.calendar-ledger-heat-level-3 {
 	background: rgba(46, 160, 67, 0.8);
 }
 
-.sfc-heat-level-4 {
+.calendar-ledger-heat-level-4 {
 	background: rgba(46, 160, 67, 1);
 }
 
-.sfc-heatmap-legend {
+.calendar-ledger-heatmap-legend {
 	display: flex;
 	align-items: center;
 	gap: 6px;
@@ -836,30 +836,30 @@
 	color: var(--text-muted);
 }
 
-.sfc-heatmap-legend-text {
+.calendar-ledger-heatmap-legend-text {
 	font-size: 10px;
 }
 
-.sfc-heatmap-legend-cells {
+.calendar-ledger-heatmap-legend-cells {
 	display: flex;
 	gap: 2px;
 }
 
-.sfc-heatmap-legend-cells .sfc-heatmap-cell {
+.calendar-ledger-heatmap-legend-cells .calendar-ledger-heatmap-cell {
 	width: 11px;
 	height: 11px;
 }
 
 /* ---------- Live Timeline ---------- */
 
-.sfc-timeline-month {
+.calendar-ledger-timeline-month {
 	display: flex;
 	align-items: flex-start;
 	gap: 8px;
 	padding: 3px 12px;
 }
 
-.sfc-timeline-month-label {
+.calendar-ledger-timeline-month-label {
 	font-size: 11px;
 	font-weight: 600;
 	color: var(--text-muted);
@@ -868,14 +868,14 @@
 	padding-top: 2px;
 }
 
-.sfc-timeline-items {
+.calendar-ledger-timeline-items {
 	flex: 1;
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
 }
 
-.sfc-timeline-item {
+.calendar-ledger-timeline-item {
 	display: flex;
 	align-items: center;
 	gap: 6px;
@@ -884,29 +884,29 @@
 	border-radius: 3px;
 }
 
-.sfc-timeline-item:hover {
+.calendar-ledger-timeline-item:hover {
 	background: var(--background-modifier-hover);
 }
 
-.sfc-timeline-marker {
+.calendar-ledger-timeline-marker {
 	flex-shrink: 0;
 }
 
-.sfc-timeline-dot {
+.calendar-ledger-timeline-dot {
 	width: 8px;
 	height: 8px;
 	border-radius: 50%;
 	background: var(--interactive-accent);
 }
 
-.sfc-timeline-range {
+.calendar-ledger-timeline-range {
 	width: 16px;
 	height: 6px;
 	border-radius: 3px;
 	background: var(--interactive-accent);
 }
 
-.sfc-timeline-info {
+.calendar-ledger-timeline-info {
 	display: flex;
 	align-items: baseline;
 	gap: 6px;
@@ -914,7 +914,7 @@
 	min-width: 0;
 }
 
-.sfc-timeline-name {
+.calendar-ledger-timeline-name {
 	font-size: 12px;
 	color: var(--text-normal);
 	overflow: hidden;
@@ -922,13 +922,13 @@
 	white-space: nowrap;
 }
 
-.sfc-timeline-date {
+.calendar-ledger-timeline-date {
 	font-size: 11px;
 	color: var(--text-muted);
 	white-space: nowrap;
 }
 
-.sfc-timeline-duration {
+.calendar-ledger-timeline-duration {
 	font-size: 10px;
 	color: var(--text-faint);
 	padding: 1px 4px;
@@ -938,18 +938,18 @@
 
 /* ---------- Flight Distribution bar chart ---------- */
 
-.sfc-bar-chart {
+.calendar-ledger-bar-chart {
 	padding: 8px 12px 4px;
 }
 
-.sfc-bar-row {
+.calendar-ledger-bar-row {
 	display: flex;
 	gap: 3px;
 	align-items: flex-end;
 	height: 80px;
 }
 
-.sfc-bar-col {
+.calendar-ledger-bar-col {
 	flex: 1;
 	display: flex;
 	flex-direction: column;
@@ -958,7 +958,7 @@
 	height: 100%;
 }
 
-.sfc-bar-wrap {
+.calendar-ledger-bar-wrap {
 	flex: 1;
 	display: flex;
 	align-items: flex-end;
@@ -966,7 +966,7 @@
 	height: 100%;
 }
 
-.sfc-bar {
+.calendar-ledger-bar {
 	width: 100%;
 	min-height: 2px;
 	background: var(--interactive-accent);
@@ -975,36 +975,36 @@
 	transition: opacity 0.15s;
 }
 
-.sfc-bar:hover {
+.calendar-ledger-bar:hover {
 	opacity: 0.8;
 }
 
-.sfc-bar-empty {
+.calendar-ledger-bar-empty {
 	background: var(--background-modifier-border);
 	cursor: default;
 }
 
-.sfc-bar-empty:hover {
+.calendar-ledger-bar-empty:hover {
 	opacity: 1;
 }
 
-.sfc-bar-label {
+.calendar-ledger-bar-label {
 	font-size: 10px;
 	color: var(--text-muted);
 	text-align: center;
 	white-space: nowrap;
 }
 
-.sfc-bar-detail {
+.calendar-ledger-bar-detail {
 	padding: 4px 12px 8px;
 }
 
-.sfc-bar-detail-month {
+.calendar-ledger-bar-detail-month {
 	border-top: 1px solid var(--background-modifier-border);
 	padding-top: 4px;
 }
 
-.sfc-bar-detail-header {
+.calendar-ledger-bar-detail-header {
 	font-size: 11px;
 	font-weight: 600;
 	color: var(--text-muted);
@@ -1013,7 +1013,7 @@
 
 /* ---------- Travel Range View ---------- */
 
-.sfc-range-row {
+.calendar-ledger-range-row {
 	display: flex;
 	align-items: center;
 	gap: 8px;
@@ -1022,11 +1022,11 @@
 	border-radius: 3px;
 }
 
-.sfc-range-row:hover {
+.calendar-ledger-range-row:hover {
 	background: var(--background-modifier-hover);
 }
 
-.sfc-range-date {
+.calendar-ledger-range-date {
 	font-size: 11px;
 	color: var(--text-normal);
 	font-weight: 500;
@@ -1035,12 +1035,12 @@
 	min-width: 96px;
 }
 
-.sfc-range-bar-col {
+.calendar-ledger-range-bar-col {
 	flex: 1;
 	display: flex;
 }
 
-.sfc-range-bar {
+.calendar-ledger-range-bar {
 	height: 16px;
 	border-radius: 3px;
 	background: var(--interactive-accent);
@@ -1050,7 +1050,7 @@
 	min-width: 8px;
 }
 
-.sfc-range-place {
+.calendar-ledger-range-place {
 	font-size: 10px;
 	color: var(--text-on-accent);
 	overflow: hidden;
@@ -1058,7 +1058,7 @@
 	white-space: nowrap;
 }
 
-.sfc-range-duration {
+.calendar-ledger-range-duration {
 	font-size: 10px;
 	color: var(--text-muted);
 	flex-shrink: 0;
@@ -1067,17 +1067,17 @@
 
 /* ==================== Year Tab ==================== */
 
-.sfc-year-toolbar {
+.calendar-ledger-year-toolbar {
 	align-items: center;
 }
 
-.sfc-year-label {
+.calendar-ledger-year-label {
 	font-size: 12px;
 	color: var(--text-muted);
 	font-weight: 600;
 }
 
-.sfc-year-select {
+.calendar-ledger-year-select {
 	padding: 3px 6px;
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 4px;
@@ -1086,36 +1086,36 @@
 	font-size: 12px;
 }
 
-.sfc-year-section {
+.calendar-ledger-year-section {
 	border-bottom: 1px solid var(--background-modifier-border);
 	padding: 8px 0;
 }
 
-.sfc-year-section:last-child {
+.calendar-ledger-year-section:last-child {
 	border-bottom: none;
 }
 
-.sfc-year-section-title {
+.calendar-ledger-year-section-title {
 	font-size: 13px;
 	font-weight: 600;
 	color: var(--text-normal);
 	padding: 4px 12px;
 }
 
-.sfc-year-section-body {
+.calendar-ledger-year-section-body {
 	padding: 2px 12px 4px;
 }
 
 /* ---------- Summary Cards ---------- */
 
-.sfc-year-cards {
+.calendar-ledger-year-cards {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
 	gap: 8px;
 	padding: 4px 0;
 }
 
-.sfc-year-card {
+.calendar-ledger-year-card {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -1126,14 +1126,14 @@
 	background: var(--background-secondary);
 }
 
-.sfc-year-card-value {
+.calendar-ledger-year-card-value {
 	font-size: 1.6em;
 	font-weight: 700;
 	color: var(--interactive-accent);
 	line-height: 1.1;
 }
 
-.sfc-year-card-label {
+.calendar-ledger-year-card-label {
 	font-size: 10px;
 	color: var(--text-muted);
 	margin-top: 4px;
@@ -1145,25 +1145,25 @@
 
 /* ---------- Year Timeline ---------- */
 
-.sfc-year-timeline {
+.calendar-ledger-year-timeline {
 	padding: 2px 0;
 }
 
-.sfc-year-month {
+.calendar-ledger-year-month {
 	border-left: 2px solid var(--background-modifier-border);
 	margin-left: 4px;
 	padding-left: 10px;
 	margin-bottom: 6px;
 }
 
-.sfc-year-month-title {
+.calendar-ledger-year-month-title {
 	font-size: 12px;
 	font-weight: 700;
 	color: var(--text-normal);
 	margin-bottom: 2px;
 }
 
-.sfc-year-event {
+.calendar-ledger-year-event {
 	display: flex;
 	gap: 8px;
 	padding: 3px 6px;
@@ -1172,16 +1172,16 @@
 	align-items: baseline;
 }
 
-.sfc-year-event:hover {
+.calendar-ledger-year-event:hover {
 	background: var(--background-modifier-hover);
 }
 
-.sfc-year-event.is-active {
+.calendar-ledger-year-event.is-active {
 	background: var(--background-modifier-active-hover);
 	color: var(--text-normal);
 }
 
-.sfc-year-event-date {
+.calendar-ledger-year-event-date {
 	font-size: 12px;
 	color: var(--text-normal);
 	font-weight: 500;
@@ -1190,7 +1190,7 @@
 	min-width: 96px;
 }
 
-.sfc-year-event-tag {
+.calendar-ledger-year-event-tag {
 	font-size: 10px;
 	font-weight: 600;
 	color: var(--text-on-accent);
@@ -1201,7 +1201,7 @@
 	white-space: nowrap;
 }
 
-.sfc-year-event-text {
+.calendar-ledger-year-event-text {
 	font-size: 12px;
 	color: var(--text-muted);
 	overflow: hidden;
@@ -1211,11 +1211,11 @@
 
 /* ---------- Year Data Overview ---------- */
 
-.sfc-year-overview-table {
+.calendar-ledger-year-overview-table {
 	margin: 4px 0 8px;
 }
 
-.sfc-year-subtitle {
+.calendar-ledger-year-subtitle {
 	font-size: 11px;
 	font-weight: 600;
 	color: var(--text-muted);
@@ -1224,7 +1224,7 @@
 	margin: 10px 0 2px;
 }
 
-.sfc-year-tag-totals {
+.calendar-ledger-year-tag-totals {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 6px 12px;
@@ -1232,7 +1232,7 @@
 	margin-top: 6px;
 }
 
-.sfc-year-tag-total {
+.calendar-ledger-year-tag-total {
 	display: flex;
 	align-items: baseline;
 	gap: 4px;
@@ -1241,13 +1241,13 @@
 	background: var(--background-secondary);
 }
 
-.sfc-year-tag-total-name {
+.calendar-ledger-year-tag-total-name {
 	font-size: 12px;
 	font-weight: 600;
 	color: var(--text-normal);
 }
 
-.sfc-year-tag-total-count {
+.calendar-ledger-year-tag-total-count {
 	font-size: 12px;
 	font-weight: 700;
 	color: var(--interactive-accent);
@@ -1255,6 +1255,6 @@
 
 /* ---------- Year Summary Settings ---------- */
 
-.sfc-year-settings-tags {
+.calendar-ledger-year-settings-tags {
 	margin-top: 8px;
 }

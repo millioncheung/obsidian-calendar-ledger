@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const outputDir = await mkdtemp(join(tmpdir(), 'sfc-tests-'));
+const outputDir = await mkdtemp(join(tmpdir(), 'calendar-ledger-tests-'));
 const outfile = join(outputDir, 'regression-tests.mjs');
 
 try {

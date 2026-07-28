@@ -1,7 +1,7 @@
 {
-	"name": "single-file-calendar",
+	"name": "calendar-ledger",
 	"version": "1.0.0",
-	"description": "Single File Calendar - Obsidian plugin for managing dates in a single Markdown file",
+	"description": "Calendar Ledger - Obsidian plugin for managing dates in a single Markdown file",
 	"main": "main.js",
 	"type": "module",
 	"scripts": {

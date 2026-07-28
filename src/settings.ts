@@ -1,5 +1,5 @@
 import { App, Notice, PluginSettingTab, Setting, TFile } from 'obsidian';
-import type SingleFileCalendarPlugin from './main';
+import type CalendarLedgerPlugin from './main';
 import { generateCalendarMarkdown } from './calendar-generator';
 import { createCalendarFile, restructureCalendar } from './calendar-writer';
 import { parseCalendar } from './calendar-parser';
@@ -9,7 +9,7 @@ import type { VisualizationType } from './types';
 
 const SETTINGS_TEXT = {
 	en: {
-		title: 'Single File Calendar Settings',
+		title: 'Calendar Ledger Settings',
 		calendarFilePath: 'Calendar file path',
 		calendarFilePathDesc: 'Path to the calendar file, for example Calendar.md or folder/Calendar.md',
 		startYear: 'Start year',
@@ -56,7 +56,7 @@ const SETTINGS_TEXT = {
 		rangeDaysDesc: (name: string) => `Total days for ${name} range events`,
 	},
 	zh: {
-		title: 'Single File Calendar 设置',
+		title: 'Calendar Ledger 设置',
 		calendarFilePath: '日历文件路径',
 		calendarFilePathDesc: '日历文件的路径，例如 Calendar.md 或 folder/Calendar.md',
 		startYear: '开始年份',
@@ -104,10 +104,10 @@ const SETTINGS_TEXT = {
 	},
 };
 
-export class SingleFileCalendarSettingTab extends PluginSettingTab {
-	plugin: SingleFileCalendarPlugin;
+export class CalendarLedgerSettingTab extends PluginSettingTab {
+	plugin: CalendarLedgerPlugin;
 
-	constructor(app: App, plugin: SingleFileCalendarPlugin) {
+	constructor(app: App, plugin: CalendarLedgerPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -231,7 +231,7 @@ export class SingleFileCalendarSettingTab extends PluginSettingTab {
 			.setName(text.statsTags)
 			.setDesc(text.statsTagsDesc);
 
-		const tagsContainer = containerEl.createDiv({ cls: 'sfc-stats-tags-list' });
+		const tagsContainer = containerEl.createDiv({ cls: 'calendar-ledger-stats-tags-list' });
 		void this.populateStatsTagsCheckboxes(tagsContainer);
 
 		// ── Visualization tag mappings ──
@@ -240,7 +240,7 @@ export class SingleFileCalendarSettingTab extends PluginSettingTab {
 			.setName(text.visualizationMappings)
 			.setDesc(text.visualizationMappingsDesc);
 
-		const visTagsContainer = containerEl.createDiv({ cls: 'sfc-vis-tags-container' });
+		const visTagsContainer = containerEl.createDiv({ cls: 'calendar-ledger-vis-tags-container' });
 		void this.populateVisualizationTagMappings(visTagsContainer);
 
 		// ── Year Summary ──
@@ -311,17 +311,17 @@ export class SingleFileCalendarSettingTab extends PluginSettingTab {
 	private async populateStatsTagsCheckboxes(container: HTMLElement): Promise<void> {
 		const text = this.text();
 		container.empty();
-		container.createSpan({ text: text.loadingTags, cls: 'sfc-stats-tags-loading' });
+		container.createSpan({ text: text.loadingTags, cls: 'calendar-ledger-stats-tags-loading' });
 
 		const tags = await this.scanTagsFromCalendar([]);
 		const enabled = new Set(this.plugin.settings.enabledStatsTags);
 
 		container.empty();
 		for (const tag of tags) {
-			const item = container.createDiv({ cls: 'sfc-stats-tag-item' });
+			const item = container.createDiv({ cls: 'calendar-ledger-stats-tag-item' });
 			const checkbox = item.createEl('input', { type: 'checkbox' });
 			checkbox.checked = enabled.has(tag);
-			checkbox.id = `sfc-stats-tag-${tag}`;
+			checkbox.id = `calendar-ledger-stats-tag-${tag}`;
 
 			const label = item.createEl('label', { text: `#${tag}` });
 			label.setAttribute('for', checkbox.id);
@@ -346,7 +346,7 @@ export class SingleFileCalendarSettingTab extends PluginSettingTab {
 	private async populateVisualizationTagMappings(container: HTMLElement): Promise<void> {
 		const text = this.text();
 		container.empty();
-		container.createSpan({ text: text.loadingTags, cls: 'sfc-stats-tags-loading' });
+		container.createSpan({ text: text.loadingTags, cls: 'calendar-ledger-stats-tags-loading' });
 
 		const tags = await this.scanTagsFromCalendar([]);
 		const mappings = this.plugin.settings.visualizationTagMappings;
@@ -362,11 +362,11 @@ export class SingleFileCalendarSettingTab extends PluginSettingTab {
 		];
 
 		for (const tag of tags) {
-			const row = container.createDiv({ cls: 'sfc-viz-mapping-row' });
+			const row = container.createDiv({ cls: 'calendar-ledger-viz-mapping-row' });
 
-			row.createEl('span', { text: `#${tag}`, cls: 'sfc-viz-mapping-tag' });
+			row.createEl('span', { text: `#${tag}`, cls: 'calendar-ledger-viz-mapping-tag' });
 
-			const select = row.createEl('select', { cls: 'sfc-viz-mapping-select dropdown' });
+			const select = row.createEl('select', { cls: 'calendar-ledger-viz-mapping-select dropdown' });
 			for (const opt of VIZ_OPTIONS) {
 				const optionEl = select.createEl('option', { value: opt.value, text: opt.label });
 				if (mappings[tag]?.vizType === opt.value) {
@@ -377,12 +377,12 @@ export class SingleFileCalendarSettingTab extends PluginSettingTab {
 				select.value = 'none';
 			}
 
-			row.createEl('span', { text: text.displayName, cls: 'sfc-viz-mapping-namelabel' });
+			row.createEl('span', { text: text.displayName, cls: 'calendar-ledger-viz-mapping-namelabel' });
 
 			const nameInput = row.createEl('input', { type: 'text' });
 			nameInput.placeholder = text.displayNamePlaceholder;
 			nameInput.value = mappings[tag]?.displayName ?? tag;
-			nameInput.addClass('sfc-viz-mapping-displayname');
+			nameInput.addClass('calendar-ledger-viz-mapping-displayname');
 			nameInput.disabled = select.value === 'none';
 
 			select.addEventListener('change', () => {
@@ -448,8 +448,8 @@ export class SingleFileCalendarSettingTab extends PluginSettingTab {
 			});
 
 		// 动态项：扫描 Calendar.md 中所有 tag，按 event-type 驱动生成 UI
-		const tagsContainer = containerEl.createDiv({ cls: 'sfc-year-settings-tags' });
-		tagsContainer.createSpan({ text: text.loadingTags, cls: 'sfc-stats-tags-loading' });
+		const tagsContainer = containerEl.createDiv({ cls: 'calendar-ledger-year-settings-tags' });
+		tagsContainer.createSpan({ text: text.loadingTags, cls: 'calendar-ledger-stats-tags-loading' });
 
 		const scannedTags = await this.scanTagsFromCalendar([]);
 		const mappings = this.plugin.settings.visualizationTagMappings;
@@ -459,7 +459,7 @@ export class SingleFileCalendarSettingTab extends PluginSettingTab {
 		if (scannedTags.length === 0) {
 			tagsContainer.createDiv({
 				text: text.noTags,
-				cls: 'sfc-empty',
+				cls: 'calendar-ledger-empty',
 			});
 			return;
 		}

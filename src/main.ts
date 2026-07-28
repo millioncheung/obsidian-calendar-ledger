@@ -1,14 +1,14 @@
 import { Plugin, TFile } from 'obsidian';
 import { DEFAULT_SETTINGS } from './types';
-import type { SingleFileCalendarSettings } from './types';
-import { SingleFileCalendarSettingTab } from './settings';
+import type { CalendarLedgerSettings } from './types';
+import { CalendarLedgerSettingTab } from './settings';
 import { registerCommands } from './commands';
-import { CalendarOutlineView, OUTLINE_VIEW_TYPE } from './outline-view';
+import { CalendarLedgerOutlineView, OUTLINE_VIEW_TYPE } from './outline-view';
 
 const REFRESH_DEBOUNCE_MS = 250;
 
-export default class SingleFileCalendarPlugin extends Plugin {
-	settings!: SingleFileCalendarSettings;
+export default class CalendarLedgerPlugin extends Plugin {
+	settings!: CalendarLedgerSettings;
 	private refreshTimer: number | null = null;
 
 	async onload(): Promise<void> {
@@ -20,7 +20,7 @@ export default class SingleFileCalendarPlugin extends Plugin {
 		// 注册自定义 Outline View
 		this.registerView(
 			OUTLINE_VIEW_TYPE,
-			(leaf) => new CalendarOutlineView(leaf, this, this.settings),
+			(leaf) => new CalendarLedgerOutlineView(leaf, this, this.settings),
 		);
 
 		// 添加打开 Outline 的命令
@@ -31,12 +31,12 @@ export default class SingleFileCalendarPlugin extends Plugin {
 		});
 
 		// 添加 Ribbon 图标
-		this.addRibbonIcon('calendar-days', 'Single file calendar', () => {
+		this.addRibbonIcon('calendar-days', this.manifest.name, () => {
 			void this.activateOutlineView();
 		});
 
 		// 注册设置页
-		this.addSettingTab(new SingleFileCalendarSettingTab(this.app, this));
+		this.addSettingTab(new CalendarLedgerSettingTab(this.app, this));
 
 		// 监听 Calendar.md 修改，debounce 后统一刷新 sidebar tab
 		this.registerEvent(
@@ -49,7 +49,7 @@ export default class SingleFileCalendarPlugin extends Plugin {
 				this.refreshTimer = window.setTimeout(() => {
 					this.refreshTimer = null;
 					for (const leaf of this.app.workspace.getLeavesOfType(OUTLINE_VIEW_TYPE)) {
-						if (leaf.view instanceof CalendarOutlineView) leaf.view.refreshData();
+						if (leaf.view instanceof CalendarLedgerOutlineView) leaf.view.refreshData();
 					}
 				}, REFRESH_DEBOUNCE_MS);
 			}),
@@ -64,14 +64,14 @@ export default class SingleFileCalendarPlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		const saved = (await this.loadData()) as Partial<SingleFileCalendarSettings> | null;
+		const saved = (await this.loadData()) as Partial<CalendarLedgerSettings> | null;
 		this.settings = normalizeSettings(saved);
 	}
 
 	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
 		for (const leaf of this.app.workspace.getLeavesOfType(OUTLINE_VIEW_TYPE)) {
-			if (leaf.view instanceof CalendarOutlineView) leaf.view.refresh(this.settings);
+			if (leaf.view instanceof CalendarLedgerOutlineView) leaf.view.refresh(this.settings);
 		}
 	}
 
@@ -97,7 +97,7 @@ export default class SingleFileCalendarPlugin extends Plugin {
 	}
 }
 
-function normalizeSettings(saved: Partial<SingleFileCalendarSettings> | null): SingleFileCalendarSettings {
+function normalizeSettings(saved: Partial<CalendarLedgerSettings> | null): CalendarLedgerSettings {
 	const data = saved ?? {};
 	const currentYear = new Date().getFullYear();
 	const startYear = Number.isInteger(data.startYear) && data.startYear! >= 1000 && data.startYear! <= 9999

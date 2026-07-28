@@ -1,9 +1,10 @@
 {
-	"id": "single-file-calendar",
-	"name": "Single File Calendar",
+	"id": "calendar-ledger",
+	"name": "Calendar Ledger",
 	"version": "1.0.0",
 	"minAppVersion": "1.7.2",
-	"description": "在单份 Markdown 文档中管理连续日期结构，支持快速跳转、插入记录和自定义大纲导航。",
-	"author": "million",
+	"description": "Manage a continuous multi-year calendar, records, tags, date ranges, and statistics in one Markdown file.",
+	"author": "millioncheung",
+	"authorUrl": "https://github.com/millioncheung",
 	"isDesktopOnly": false
 }

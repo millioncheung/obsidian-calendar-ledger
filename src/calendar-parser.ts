@@ -102,7 +102,15 @@ export function parseCalendar(content: string): CalendarParseResult {
 				date = rawDate;
 			}
 			const title = line.replace(/^\s*-\s+\*\*/, '').replace(/\*\*\s*.*$/, '');
-			const inlineContent = (bulletMatch[3] ?? '').trim();
+			// `｜` is the formatting delimiter between the date marker and its
+			// records, not part of the record itself. Keep parsed content
+			// canonical so rebuilding the calendar cannot prepend another
+			// delimiter on every settings toggle. Strip repeated delimiters too
+			// so files already affected by the bug repair themselves next time.
+			const inlineContent = (bulletMatch[3] ?? '')
+				.trim()
+				.replace(/^(?:[|｜]\s*)+/, '')
+				.trim();
 			items.push({
 				line: i,
 				title,

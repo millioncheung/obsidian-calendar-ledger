@@ -40,6 +40,27 @@ test('migration is idempotent', () => {
 	assert.deepEqual(migrateCalendarContent(canonical), { content: canonical, changeCount: 0 });
 });
 
+test('migration collapses repeated spaced inline separators', () => {
+	const affected = '- **01-08 Thu** ｜ ｜ ｜ #fitness';
+	assert.deepEqual(migrateCalendarContent(affected), {
+		content: '- **01-08 Thu** ｜ #fitness',
+		changeCount: 1,
+	});
+});
+
+test('parser excludes repeated inline separators from record content', () => {
+	const calendar = [
+		'# 2026',
+		'## Jan',
+		'- **01-08 Thu** ｜ ｜ ｜ #fitness',
+	].join('\n');
+	const { dayBlockMap } = parseCalendar(calendar);
+	const day = dayBlockMap['2026-01-08'];
+	assert.ok(day);
+	assert.equal(day.inlineContent, '#fitness');
+	assert.equal(day.hasInline, true);
+});
+
 test('multiple tags without punctuation share one record payload', () => {
 	const infos = extractAllItems('#travel #family 北京 07-20～07-25', 2026);
 	assert.deepEqual(infos.map((info) => info.tag), ['travel', 'family']);

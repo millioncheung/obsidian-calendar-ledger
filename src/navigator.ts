@@ -100,7 +100,7 @@ export async function navigateToCalendarLine(
 		// 9. 500ms 后高亮（不依赖滚动完成，setTimeout 控制）
 		scheduleHighlight(view, editor, targetLine, hint);
 	} catch (e) {
-		console.error('[SFC] navigateToCalendarLine error:', e);
+		console.error('[Calendar Ledger] navigateToCalendarLine error:', e);
 	}
 }
 
@@ -229,7 +229,7 @@ function clearCurrentHighlight(): void {
 		highlightTimer = null;
 	}
 	if (currentHighlightEl) {
-		currentHighlightEl.classList.remove('sfc-jump-flash');
+		currentHighlightEl.classList.remove('calendar-ledger-jump-flash');
 		currentHighlightEl = null;
 	}
 }
@@ -256,15 +256,15 @@ function scheduleHighlight(
 		if (!lineEl) return;
 
 		// 重置 animation（连续点击时重新播放）
-		lineEl.classList.remove('sfc-jump-flash');
+		lineEl.classList.remove('calendar-ledger-jump-flash');
 		void lineEl.offsetWidth;
-		lineEl.classList.add('sfc-jump-flash');
+		lineEl.classList.add('calendar-ledger-jump-flash');
 		currentHighlightEl = lineEl;
 
 		// 1500ms 后移除高亮 class
 		window.setTimeout(() => {
 			if (currentHighlightEl === lineEl) {
-				lineEl.classList.remove('sfc-jump-flash');
+				lineEl.classList.remove('calendar-ledger-jump-flash');
 				currentHighlightEl = null;
 			}
 		}, 1500);

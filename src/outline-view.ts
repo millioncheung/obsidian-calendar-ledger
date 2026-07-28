@@ -38,16 +38,16 @@ import {
 import type {
 	CalendarDayBlock,
 	CalendarRange,
-	SingleFileCalendarSettings,
+	CalendarLedgerSettings,
 } from './types';
 
-export const OUTLINE_VIEW_TYPE = 'single-file-calendar-outline';
+export const OUTLINE_VIEW_TYPE = 'calendar-ledger-outline';
 
 type TabType = 'content' | 'upcoming' | 'stats' | 'heatmap' | 'year';
 
-export class CalendarOutlineView extends ItemView {
+export class CalendarLedgerOutlineView extends ItemView {
 	private plugin: Plugin;
-	private settings: SingleFileCalendarSettings;
+	private settings: CalendarLedgerSettings;
 	private currentTab: TabType;
 	private heatmapYear: number;
 	private yearSummaryYear: number;
@@ -57,7 +57,7 @@ export class CalendarOutlineView extends ItemView {
 	private cacheInvalidated: boolean = true;
 	private renderVersion = 0;
 
-	constructor(leaf: WorkspaceLeaf, plugin: Plugin, settings: SingleFileCalendarSettings) {
+	constructor(leaf: WorkspaceLeaf, plugin: Plugin, settings: CalendarLedgerSettings) {
 		super(leaf);
 		this.plugin = plugin;
 		this.settings = settings;
@@ -71,7 +71,7 @@ export class CalendarOutlineView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return 'Single file calendar';
+		return this.plugin.manifest.name;
 	}
 
 	getIcon(): string {
@@ -89,7 +89,7 @@ export class CalendarOutlineView extends ItemView {
 	/**
 	 * 刷新视图
 	 */
-	refresh(settings: SingleFileCalendarSettings): void {
+	refresh(settings: CalendarLedgerSettings): void {
 		this.settings = settings;
 		this.cacheInvalidated = true;
 		void this.render();
@@ -112,14 +112,14 @@ export class CalendarOutlineView extends ItemView {
 		const renderVersion = ++this.renderVersion;
 		const container = this.contentEl;
 		container.empty();
-		container.addClass('single-file-calendar-outline');
+		container.addClass('calendar-ledger-outline');
 
 		// 读取并解析 Calendar.md
 		const file = this.plugin.app.vault.getFileByPath(this.settings.calendarFilePath);
 		if (!file) {
 			container.createDiv({
 				text: 'Calendar file not found. Use "Generate calendar file" command first.',
-				cls: 'sfc-empty',
+				cls: 'calendar-ledger-empty',
 			});
 			return;
 		}
@@ -134,7 +134,7 @@ export class CalendarOutlineView extends ItemView {
 		if (renderVersion !== this.renderVersion) return;
 
 		// 顶部工具栏
-		const toolbar = container.createDiv({ cls: 'sfc-toolbar' });
+		const toolbar = container.createDiv({ cls: 'calendar-ledger-toolbar' });
 
 		// Tab 切换按钮
 		const tabs: { id: TabType; label: string }[] = [
@@ -144,11 +144,11 @@ export class CalendarOutlineView extends ItemView {
 			{ id: 'heatmap', label: 'Heatmap' },
 			{ id: 'year', label: 'Year' },
 		];
-		const tabGroup = toolbar.createDiv({ cls: 'sfc-tab-group' });
+		const tabGroup = toolbar.createDiv({ cls: 'calendar-ledger-tab-group' });
 		for (const tab of tabs) {
 			const btn = tabGroup.createEl('button', {
 				text: tab.label,
-				cls: 'sfc-tab-btn' + (tab.id === this.currentTab ? ' sfc-tab-active' : ''),
+				cls: 'calendar-ledger-tab-btn' + (tab.id === this.currentTab ? ' calendar-ledger-tab-active' : ''),
 			});
 			btn.addEventListener('click', () => {
 				this.currentTab = tab.id;
@@ -157,14 +157,14 @@ export class CalendarOutlineView extends ItemView {
 		}
 
 		// 刷新按钮
-		const refreshBtn = toolbar.createEl('button', { text: 'Refresh', cls: 'sfc-btn' });
+		const refreshBtn = toolbar.createEl('button', { text: 'Refresh', cls: 'calendar-ledger-btn' });
 		refreshBtn.addEventListener('click', () => {
 			this.cacheInvalidated = true;
 			void this.render();
 		});
 
 		// Content 区
-		const content = container.createDiv({ cls: 'sfc-content' });
+		const content = container.createDiv({ cls: 'calendar-ledger-content' });
 
 		switch (this.currentTab) {
 			case 'content':
@@ -191,23 +191,23 @@ export class CalendarOutlineView extends ItemView {
 		const daysWithContent = this.cachedDayBlocks.filter((b) => b.hasContent);
 
 		if (daysWithContent.length === 0) {
-			container.createDiv({ text: 'No content yet.', cls: 'sfc-empty' });
+			container.createDiv({ text: 'No content yet.', cls: 'calendar-ledger-empty' });
 			return;
 		}
 
 		// 按日期分组到月份
 		const grouped = this.groupByMonth(daysWithContent);
-		const listContainer = container.createDiv({ cls: 'sfc-list' });
+		const listContainer = container.createDiv({ cls: 'calendar-ledger-list' });
 
 		for (const [monthLabel, days] of Object.entries(grouped)) {
-			const monthHeader = listContainer.createDiv({ cls: 'sfc-list-month' });
-			monthHeader.createSpan({ text: monthLabel, cls: 'sfc-list-month-title' });
+			const monthHeader = listContainer.createDiv({ cls: 'calendar-ledger-list-month' });
+			monthHeader.createSpan({ text: monthLabel, cls: 'calendar-ledger-list-month-title' });
 
 			for (const day of days) {
-				const row = listContainer.createDiv({ cls: 'sfc-list-row' });
-				row.createSpan({ text: day.title, cls: 'sfc-list-date' });
+				const row = listContainer.createDiv({ cls: 'calendar-ledger-list-row' });
+				row.createSpan({ text: day.title, cls: 'calendar-ledger-list-date' });
 				if (day.inlineContent) {
-					row.createSpan({ text: day.inlineContent, cls: 'sfc-list-content' });
+					row.createSpan({ text: day.inlineContent, cls: 'calendar-ledger-list-content' });
 				}
 				const line = day.lineStart;
 				const title = day.title;
@@ -263,9 +263,9 @@ export class CalendarOutlineView extends ItemView {
 				items.push({
 					sortDate: day.date,
 					render: (lc) => {
-						const row = lc.createDiv({ cls: 'sfc-list-row' });
-						row.createSpan({ text: day.title, cls: 'sfc-list-date' });
-						row.createSpan({ text: inlineItem, cls: 'sfc-list-content' });
+						const row = lc.createDiv({ cls: 'calendar-ledger-list-row' });
+						row.createSpan({ text: day.title, cls: 'calendar-ledger-list-date' });
+						row.createSpan({ text: inlineItem, cls: 'calendar-ledger-list-content' });
 						const line = day.lineStart;
 						const title = day.title;
 						row.addEventListener('click', (e) => {
@@ -299,15 +299,15 @@ export class CalendarOutlineView extends ItemView {
 				items.push({
 					sortDate: date,
 					render: (lc) => {
-						const row = lc.createDiv({ cls: 'sfc-list-row' });
+						const row = lc.createDiv({ cls: 'calendar-ledger-list-row' });
 						if (isFirst) {
-							row.createSpan({ text: title, cls: 'sfc-list-date' });
+							row.createSpan({ text: title, cls: 'calendar-ledger-list-date' });
 							if (strippedContent) {
-								row.createSpan({ text: strippedContent, cls: 'sfc-list-content' });
+								row.createSpan({ text: strippedContent, cls: 'calendar-ledger-list-content' });
 							}
 						} else {
-							row.createSpan({ text: title, cls: 'sfc-list-date' });
-							row.createSpan({ text: '↳', cls: 'sfc-list-content' });
+							row.createSpan({ text: title, cls: 'calendar-ledger-list-date' });
+							row.createSpan({ text: '↳', cls: 'calendar-ledger-list-content' });
 						}
 						const srcLine = sourceDay.lineStart;
 						const srcTitle = sourceDay.title;
@@ -325,7 +325,7 @@ export class CalendarOutlineView extends ItemView {
 		items.sort((a, b) => a.sortDate.localeCompare(b.sortDate));
 
 		if (items.length === 0) {
-			container.createDiv({ text: 'No upcoming items.', cls: 'sfc-empty' });
+			container.createDiv({ text: 'No upcoming items.', cls: 'calendar-ledger-empty' });
 			return;
 		}
 
@@ -338,10 +338,10 @@ export class CalendarOutlineView extends ItemView {
 			grouped[label].push(item);
 		}
 
-		const listContainer = container.createDiv({ cls: 'sfc-list' });
+		const listContainer = container.createDiv({ cls: 'calendar-ledger-list' });
 		for (const [monthLabel, monthItems] of Object.entries(grouped)) {
-			const monthHeader = listContainer.createDiv({ cls: 'sfc-list-month' });
-			monthHeader.createSpan({ text: monthLabel, cls: 'sfc-list-month-title' });
+			const monthHeader = listContainer.createDiv({ cls: 'calendar-ledger-list-month' });
+			monthHeader.createSpan({ text: monthLabel, cls: 'calendar-ledger-list-month-title' });
 
 			for (const item of monthItems) {
 				item.render(listContainer);
@@ -419,13 +419,13 @@ export class CalendarOutlineView extends ItemView {
 		defaultExpanded: boolean = false,
 		stateKey?: string,
 	): HTMLElement {
-		const section = container.createDiv({ cls: 'sfc-stats-section' });
-		const header = section.createDiv({ cls: 'sfc-stats-header is-collapsible' });
-		header.createSpan({ text: title, cls: 'sfc-stats-title' });
+		const section = container.createDiv({ cls: 'calendar-ledger-stats-section' });
+		const header = section.createDiv({ cls: 'calendar-ledger-stats-header is-collapsible' });
+		header.createSpan({ text: title, cls: 'calendar-ledger-stats-title' });
 		if (countText) {
-			header.createSpan({ text: countText, cls: 'sfc-stats-total' });
+			header.createSpan({ text: countText, cls: 'calendar-ledger-stats-total' });
 		}
-		const body = section.createDiv({ cls: 'sfc-stats-section-body' });
+		const body = section.createDiv({ cls: 'calendar-ledger-stats-section-body' });
 		const expanded = this.getCollapsibleExpanded(stateKey, defaultExpanded);
 		body.style.display = expanded ? 'block' : 'none';
 		if (expanded) header.classList.add('is-expanded');
@@ -448,11 +448,11 @@ export class CalendarOutlineView extends ItemView {
 		count: number,
 		stateKey?: string,
 	): HTMLElement {
-		const monthRow = body.createDiv({ cls: 'sfc-stats-month-row' });
-		monthRow.createSpan({ text: monthKey, cls: 'sfc-stats-month-key' });
-		monthRow.createSpan({ text: `${count} 次`, cls: 'sfc-stats-month-count' });
+		const monthRow = body.createDiv({ cls: 'calendar-ledger-stats-month-row' });
+		monthRow.createSpan({ text: monthKey, cls: 'calendar-ledger-stats-month-key' });
+		monthRow.createSpan({ text: `${count} 次`, cls: 'calendar-ledger-stats-month-count' });
 
-		const dayList = body.createDiv({ cls: 'sfc-stats-day-list' });
+		const dayList = body.createDiv({ cls: 'calendar-ledger-stats-day-list' });
 		const expanded = this.getCollapsibleExpanded(stateKey, false);
 		dayList.style.display = expanded ? 'block' : 'none';
 		monthRow.classList.toggle('is-expanded', expanded);
@@ -496,15 +496,15 @@ export class CalendarOutlineView extends ItemView {
 		const body = this.createCollapsibleSection(container, tag, `${occurrences.length} 次`, false, `stats:simple:${tag}`);
 
 		if (occurrences.length === 0) {
-			body.createDiv({ text: 'No records.', cls: 'sfc-empty' });
+			body.createDiv({ text: 'No records.', cls: 'calendar-ledger-empty' });
 			return;
 		}
 
 		for (const occ of [...occurrences].sort((a, b) => a.date.localeCompare(b.date))) {
-			const row = body.createDiv({ cls: 'sfc-stats-item' });
-			row.createSpan({ text: occ.displayDate, cls: 'sfc-stats-item-date' });
+			const row = body.createDiv({ cls: 'calendar-ledger-stats-item' });
+			row.createSpan({ text: occ.displayDate, cls: 'calendar-ledger-stats-item-date' });
 			if (occ.cleanText) {
-				row.createSpan({ text: occ.cleanText, cls: 'sfc-stats-item-text' });
+				row.createSpan({ text: occ.cleanText, cls: 'calendar-ledger-stats-item-text' });
 			}
 			const line = occ.lineStart;
 			const title = occ.title;
@@ -521,15 +521,15 @@ export class CalendarOutlineView extends ItemView {
 		const body = this.createCollapsibleSection(container, displayName, `${stats.total} 次`, false, `stats:activity:${tag}`);
 
 		if (stats.byMonth.length === 0) {
-			body.createDiv({ text: `No ${displayName} records.`, cls: 'sfc-empty' });
+			body.createDiv({ text: `No ${displayName} records.`, cls: 'calendar-ledger-empty' });
 			return;
 		}
 
 		for (const month of stats.byMonth) {
 			const dayList = this.createCollapsibleMonthRow(body, month.monthKey, month.count, `stats:activity:${tag}:month:${month.monthKey}`);
 			for (const item of month.items) {
-				const dayRow = dayList.createDiv({ cls: 'sfc-stats-item' });
-				dayRow.createSpan({ text: item.date.slice(5), cls: 'sfc-stats-item-date' });
+				const dayRow = dayList.createDiv({ cls: 'calendar-ledger-stats-item' });
+				dayRow.createSpan({ text: item.date.slice(5), cls: 'calendar-ledger-stats-item-date' });
 				const line = item.lineStart;
 				const title = item.title;
 				dayRow.addEventListener('click', (e) => {
@@ -546,14 +546,14 @@ export class CalendarOutlineView extends ItemView {
 		const body = this.createCollapsibleSection(container, displayName, `${stats.total} 场`, false, `stats:event:${tag}`);
 
 		if (stats.items.length === 0) {
-			body.createDiv({ text: `No ${displayName} records.`, cls: 'sfc-empty' });
+			body.createDiv({ text: `No ${displayName} records.`, cls: 'calendar-ledger-empty' });
 			return;
 		}
 
 		for (const item of stats.items) {
-			const row = body.createDiv({ cls: 'sfc-stats-item' });
-			row.createSpan({ text: item.displayDate, cls: 'sfc-stats-item-date' });
-			row.createSpan({ text: item.name, cls: 'sfc-stats-item-text' });
+			const row = body.createDiv({ cls: 'calendar-ledger-stats-item' });
+			row.createSpan({ text: item.displayDate, cls: 'calendar-ledger-stats-item-date' });
+			row.createSpan({ text: item.name, cls: 'calendar-ledger-stats-item-text' });
 			const line = item.lineStart;
 			const title = item.title;
 			row.addEventListener('click', (e) => {
@@ -569,14 +569,14 @@ export class CalendarOutlineView extends ItemView {
 		const body = this.createCollapsibleSection(container, displayName, `${stats.total} 段`, false, `stats:monthly:${tag}`);
 
 		if (stats.items.length === 0) {
-			body.createDiv({ text: `No ${displayName} records.`, cls: 'sfc-empty' });
+			body.createDiv({ text: `No ${displayName} records.`, cls: 'calendar-ledger-empty' });
 			return;
 		}
 
 		for (const item of stats.items) {
-			const row = body.createDiv({ cls: 'sfc-stats-item' });
-			row.createSpan({ text: item.date.slice(5), cls: 'sfc-stats-item-date' });
-			row.createSpan({ text: item.text, cls: 'sfc-stats-item-text' });
+			const row = body.createDiv({ cls: 'calendar-ledger-stats-item' });
+			row.createSpan({ text: item.date.slice(5), cls: 'calendar-ledger-stats-item-date' });
+			row.createSpan({ text: item.text, cls: 'calendar-ledger-stats-item-text' });
 			const line = item.lineStart;
 			const title = item.title;
 			row.addEventListener('click', (e) => {
@@ -592,14 +592,14 @@ export class CalendarOutlineView extends ItemView {
 		const body = this.createCollapsibleSection(container, displayName, `${stats.total} 次`, false, `stats:range:${tag}`);
 
 		if (stats.items.length === 0) {
-			body.createDiv({ text: `No ${displayName} records.`, cls: 'sfc-empty' });
+			body.createDiv({ text: `No ${displayName} records.`, cls: 'calendar-ledger-empty' });
 			return;
 		}
 
 		for (const item of stats.items) {
-			const row = body.createDiv({ cls: 'sfc-stats-item' });
-			row.createSpan({ text: item.displayDate, cls: 'sfc-stats-item-date' });
-			row.createSpan({ text: item.place, cls: 'sfc-stats-item-text' });
+			const row = body.createDiv({ cls: 'calendar-ledger-stats-item' });
+			row.createSpan({ text: item.displayDate, cls: 'calendar-ledger-stats-item-date' });
+			row.createSpan({ text: item.place, cls: 'calendar-ledger-stats-item-text' });
 			const line = item.lineStart;
 			const title = item.title;
 			row.addEventListener('click', (e) => {
@@ -619,12 +619,12 @@ export class CalendarOutlineView extends ItemView {
 		const body = this.createCollapsibleSection(container, 'Monthly Summary', '', false, 'stats:monthly-summary');
 
 		if (items.length === 0 || columns.length === 0) {
-			body.createDiv({ text: 'No records.', cls: 'sfc-empty' });
+			body.createDiv({ text: 'No records.', cls: 'calendar-ledger-empty' });
 			return;
 		}
 
-		const tableWrap = body.createDiv({ cls: 'sfc-table-scroll' });
-		const table = tableWrap.createEl('table', { cls: 'sfc-stats-table' });
+		const tableWrap = body.createDiv({ cls: 'calendar-ledger-table-scroll' });
+		const table = tableWrap.createEl('table', { cls: 'calendar-ledger-stats-table' });
 		const thead = table.createEl('thead');
 		const headRow = thead.createEl('tr');
 		headRow.createEl('th', { text: 'Month' });
@@ -653,9 +653,9 @@ export class CalendarOutlineView extends ItemView {
 			this.heatmapYear = years[0] ?? new Date().getFullYear();
 		}
 
-		const subtoolbar = container.createDiv({ cls: 'sfc-subtoolbar sfc-heatmap-toolbar' });
-		subtoolbar.createSpan({ text: 'Year', cls: 'sfc-heatmap-year-label' });
-		const select = subtoolbar.createEl('select', { cls: 'sfc-heatmap-year-select' });
+		const subtoolbar = container.createDiv({ cls: 'calendar-ledger-subtoolbar calendar-ledger-heatmap-toolbar' });
+		subtoolbar.createSpan({ text: 'Year', cls: 'calendar-ledger-heatmap-year-label' });
+		const select = subtoolbar.createEl('select', { cls: 'calendar-ledger-heatmap-year-select' });
 		for (const y of years) {
 			const opt = select.createEl('option', { text: String(y), value: String(y) });
 			if (y === this.heatmapYear) opt.selected = true;
@@ -751,21 +751,21 @@ export class CalendarOutlineView extends ItemView {
 			stateKey,
 		);
 
-		const summary = body.createDiv({ cls: 'sfc-heatmap-summary' });
-		summary.createSpan({ text: `${data.year}`, cls: 'sfc-heatmap-year-tag' });
+		const summary = body.createDiv({ cls: 'calendar-ledger-heatmap-summary' });
+		summary.createSpan({ text: `${data.year}`, cls: 'calendar-ledger-heatmap-year-tag' });
 		summary.createSpan({
 			text: `Total ${data.total} · Active ${data.activeDays} days`,
-			cls: 'sfc-heatmap-summary-text',
+			cls: 'calendar-ledger-heatmap-summary-text',
 		});
 
 		if (data.total === 0) {
-			body.createDiv({ text: 'No activity records this year.', cls: 'sfc-empty' });
+			body.createDiv({ text: 'No activity records this year.', cls: 'calendar-ledger-empty' });
 			return;
 		}
 
 		// 网格容器（横向可滚动）
-		const wrap = body.createDiv({ cls: 'sfc-heatmap-wrap' });
-		const grid = wrap.createDiv({ cls: 'sfc-heatmap-grid' });
+		const wrap = body.createDiv({ cls: 'calendar-ledger-heatmap-wrap' });
+		const grid = wrap.createDiv({ cls: 'calendar-ledger-heatmap-grid' });
 
 		// 按列号计算月份归属
 		const colMonth: number[] = [];
@@ -784,14 +784,14 @@ export class CalendarOutlineView extends ItemView {
 		}
 
 		// 月份标签行
-		const monthLabelRow = grid.createDiv({ cls: 'sfc-heatmap-month-labels' });
-		monthLabelRow.createDiv({ cls: 'sfc-heatmap-dow-spacer' });
-		const monthsRow = monthLabelRow.createDiv({ cls: 'sfc-heatmap-months' });
-		const monthCells = monthsRow.createDiv({ cls: 'sfc-heatmap-months-inner' });
+		const monthLabelRow = grid.createDiv({ cls: 'calendar-ledger-heatmap-month-labels' });
+		monthLabelRow.createDiv({ cls: 'calendar-ledger-heatmap-dow-spacer' });
+		const monthsRow = monthLabelRow.createDiv({ cls: 'calendar-ledger-heatmap-months' });
+		const monthCells = monthsRow.createDiv({ cls: 'calendar-ledger-heatmap-months-inner' });
 		let lastMonth = -1;
 		for (let c = 0; c < data.weekCount; c++) {
 			const m = colMonth[c] ?? lastMonth;
-			const label = monthCells.createEl('span', { cls: 'sfc-heatmap-month-label' });
+			const label = monthCells.createEl('span', { cls: 'calendar-ledger-heatmap-month-label' });
 			if (m !== lastMonth && m != null) {
 				label.textContent = monthAbbr(`0000-${String(m).padStart(2, '0')}`);
 				lastMonth = m;
@@ -799,19 +799,19 @@ export class CalendarOutlineView extends ItemView {
 		}
 
 		// 网格主体：7 行 × N 列
-		const gridBody = grid.createDiv({ cls: 'sfc-heatmap-body' });
+		const gridBody = grid.createDiv({ cls: 'calendar-ledger-heatmap-body' });
 
 		// 星期标签列
 		const dowLabels = this.settings.weekStartsOn === 'monday'
 			? ['Mon', '', 'Wed', '', 'Fri', '', 'Sun']
 			: ['Sun', '', 'Tue', '', 'Thu', '', 'Sat'];
-		const dowCol = gridBody.createDiv({ cls: 'sfc-heatmap-dow' });
+		const dowCol = gridBody.createDiv({ cls: 'calendar-ledger-heatmap-dow' });
 		for (const d of dowLabels) {
-			dowCol.createDiv({ text: d, cls: 'sfc-heatmap-dow-label' });
+			dowCol.createDiv({ text: d, cls: 'calendar-ledger-heatmap-dow-label' });
 		}
 
 		// 单元格区域
-		const cellsArea = gridBody.createDiv({ cls: 'sfc-heatmap-cells' });
+		const cellsArea = gridBody.createDiv({ cls: 'calendar-ledger-heatmap-cells' });
 		// 构建二维数组（weekCount 列 × 7 行）
 		const grid2d: (ActivityHeatmapData['cells'][number] | null)[][] = [];
 		for (let c = 0; c < data.weekCount; c++) {
@@ -823,15 +823,15 @@ export class CalendarOutlineView extends ItemView {
 			}
 		}
 		for (let c = 0; c < data.weekCount; c++) {
-			const col = cellsArea.createDiv({ cls: 'sfc-heatmap-col' });
+			const col = cellsArea.createDiv({ cls: 'calendar-ledger-heatmap-col' });
 			if (monthStartCols.has(c)) {
-				col.addClass('sfc-month-start');
+				col.addClass('calendar-ledger-month-start');
 			}
 			for (let r = 0; r < 7; r++) {
 				const cell = grid2d[c]![r];
-				const cellEl = col.createDiv({ cls: 'sfc-heatmap-cell' });
+				const cellEl = col.createDiv({ cls: 'calendar-ledger-heatmap-cell' });
 				const intensity = cell ? activityIntensity(cell.count, data.maxCount) : 0;
-				cellEl.addClass(`sfc-heat-level-${intensity}`);
+				cellEl.addClass(`calendar-ledger-heat-level-${intensity}`);
 				if (cell) {
 					// tooltip：完整日期 + 内容
 					const weekday = new Date(cell.date + 'T00:00:00').toLocaleDateString('en', { weekday: 'short' });
@@ -847,20 +847,20 @@ export class CalendarOutlineView extends ItemView {
 							e.preventDefault();
 							void this.navigateToLine(cell.lineStart, cell.title);
 						});
-						cellEl.addClass('sfc-heatmap-cell-clickable');
+						cellEl.addClass('calendar-ledger-heatmap-cell-clickable');
 					}
 				}
 			}
 		}
 
 		// 图例
-		const legend = body.createDiv({ cls: 'sfc-heatmap-legend' });
-		legend.createSpan({ text: 'Less', cls: 'sfc-heatmap-legend-text' });
-		const legendCells = legend.createDiv({ cls: 'sfc-heatmap-legend-cells' });
+		const legend = body.createDiv({ cls: 'calendar-ledger-heatmap-legend' });
+		legend.createSpan({ text: 'Less', cls: 'calendar-ledger-heatmap-legend-text' });
+		const legendCells = legend.createDiv({ cls: 'calendar-ledger-heatmap-legend-cells' });
 		for (let i = 0; i <= 4; i++) {
-			legendCells.createDiv({ cls: `sfc-heatmap-cell sfc-heat-level-${i}` });
+			legendCells.createDiv({ cls: `calendar-ledger-heatmap-cell calendar-ledger-heat-level-${i}` });
 		}
-		legend.createSpan({ text: 'More', cls: 'sfc-heatmap-legend-text' });
+		legend.createSpan({ text: 'More', cls: 'calendar-ledger-heatmap-legend-text' });
 	}
 
 	// ---------- Live Timeline ----------
@@ -880,31 +880,31 @@ export class CalendarOutlineView extends ItemView {
 		);
 
 		if (data.total === 0) {
-			body.createDiv({ text: 'No records this year.', cls: 'sfc-empty' });
+			body.createDiv({ text: 'No records this year.', cls: 'calendar-ledger-empty' });
 			return;
 		}
 
 		for (const month of data.byMonth) {
-			const monthRow = body.createDiv({ cls: 'sfc-timeline-month' });
+			const monthRow = body.createDiv({ cls: 'calendar-ledger-timeline-month' });
 			monthRow.createSpan({
 				text: monthAbbr(month.monthKey),
-				cls: 'sfc-timeline-month-label',
+				cls: 'calendar-ledger-timeline-month-label',
 			});
-			const itemsEl = monthRow.createDiv({ cls: 'sfc-timeline-items' });
+			const itemsEl = monthRow.createDiv({ cls: 'calendar-ledger-timeline-items' });
 			for (const item of month.items) {
-				const itemEl = itemsEl.createDiv({ cls: 'sfc-timeline-item' });
-				const marker = itemEl.createDiv({ cls: 'sfc-timeline-marker' });
-				marker.addClass(item.isRange ? 'sfc-timeline-range' : 'sfc-timeline-dot');
-				const info = itemEl.createDiv({ cls: 'sfc-timeline-info' });
-				info.createSpan({ text: item.name, cls: 'sfc-timeline-name' });
+				const itemEl = itemsEl.createDiv({ cls: 'calendar-ledger-timeline-item' });
+				const marker = itemEl.createDiv({ cls: 'calendar-ledger-timeline-marker' });
+				marker.addClass(item.isRange ? 'calendar-ledger-timeline-range' : 'calendar-ledger-timeline-dot');
+				const info = itemEl.createDiv({ cls: 'calendar-ledger-timeline-info' });
+				info.createSpan({ text: item.name, cls: 'calendar-ledger-timeline-name' });
 				const dateText = item.isRange
 					? `${item.startDate.slice(5)}~${item.endDate.slice(5)}`
 					: item.startDate.slice(5);
-				info.createSpan({ text: dateText, cls: 'sfc-timeline-date' });
+				info.createSpan({ text: dateText, cls: 'calendar-ledger-timeline-date' });
 				if (item.isRange) {
 					info.createSpan({
 						text: `${item.duration}d`,
-						cls: 'sfc-timeline-duration',
+						cls: 'calendar-ledger-timeline-duration',
 					});
 				}
 				const line = item.lineStart;
@@ -936,18 +936,18 @@ export class CalendarOutlineView extends ItemView {
 		);
 
 		if (data.total === 0) {
-			body.createDiv({ text: 'No records this year.', cls: 'sfc-empty' });
+			body.createDiv({ text: 'No records this year.', cls: 'calendar-ledger-empty' });
 			return;
 		}
 
 		// 柱状图
-		const chart = body.createDiv({ cls: 'sfc-bar-chart' });
-		const barsRow = chart.createDiv({ cls: 'sfc-bar-row' });
+		const chart = body.createDiv({ cls: 'calendar-ledger-bar-chart' });
+		const barsRow = chart.createDiv({ cls: 'calendar-ledger-bar-row' });
 		for (const m of data.byMonth) {
-			const barCol = barsRow.createDiv({ cls: 'sfc-bar-col' });
-			const barWrap = barCol.createDiv({ cls: 'sfc-bar-wrap' });
+			const barCol = barsRow.createDiv({ cls: 'calendar-ledger-bar-col' });
+			const barWrap = barCol.createDiv({ cls: 'calendar-ledger-bar-wrap' });
 			const heightPct = data.maxCount > 0 ? (m.count / data.maxCount) * 100 : 0;
-			const bar = barWrap.createDiv({ cls: 'sfc-bar' });
+			const bar = barWrap.createDiv({ cls: 'calendar-ledger-bar' });
 			bar.style.height = `${heightPct}%`;
 			if (m.count > 0) {
 				bar.setAttribute('title', `${monthAbbr(m.monthKey)}: ${m.count}`);
@@ -957,16 +957,16 @@ export class CalendarOutlineView extends ItemView {
 					this.toggleMonthlyDistributionDetail(body, m);
 				});
 			} else {
-				bar.addClass('sfc-bar-empty');
+				bar.addClass('calendar-ledger-bar-empty');
 			}
 			barCol.createDiv({
 				text: monthAbbr(m.monthKey),
-				cls: 'sfc-bar-label',
+				cls: 'calendar-ledger-bar-label',
 			});
 		}
 
 		// 明细容器（点击柱子展开）
-		const detail = body.createDiv({ cls: 'sfc-bar-detail' });
+		const detail = body.createDiv({ cls: 'calendar-ledger-bar-detail' });
 		detail.addClass('is-hidden');
 	}
 
@@ -977,25 +977,25 @@ export class CalendarOutlineView extends ItemView {
 		container: HTMLElement,
 		month: MonthlyDistributionData['byMonth'][number],
 	): void {
-		const detail = container.querySelector<HTMLElement>('.sfc-bar-detail');
+		const detail = container.querySelector<HTMLElement>('.calendar-ledger-bar-detail');
 		if (!detail) return;
-		const existing = detail.querySelector('.sfc-bar-detail-month');
+		const existing = detail.querySelector('.calendar-ledger-bar-detail-month');
 		if (existing && (existing as HTMLElement).dataset.monthKey === month.monthKey) {
 			detail.addClass('is-hidden');
 			detail.empty();
 			return;
 		}
 		detail.empty();
-		const monthWrap = detail.createDiv({ cls: 'sfc-bar-detail-month' });
+		const monthWrap = detail.createDiv({ cls: 'calendar-ledger-bar-detail-month' });
 		monthWrap.dataset.monthKey = month.monthKey;
 		monthWrap.createDiv({
 			text: `${monthAbbr(month.monthKey)} · ${month.count} 段`,
-			cls: 'sfc-bar-detail-header',
+			cls: 'calendar-ledger-bar-detail-header',
 		});
 		for (const item of month.items) {
-			const row = monthWrap.createDiv({ cls: 'sfc-stats-item' });
-			row.createSpan({ text: item.date.slice(5), cls: 'sfc-stats-item-date' });
-			row.createSpan({ text: item.text, cls: 'sfc-stats-item-text' });
+			const row = monthWrap.createDiv({ cls: 'calendar-ledger-stats-item' });
+			row.createSpan({ text: item.date.slice(5), cls: 'calendar-ledger-stats-item-date' });
+			row.createSpan({ text: item.text, cls: 'calendar-ledger-stats-item-text' });
 			const line = item.lineStart;
 			const title = item.title;
 			row.addEventListener('click', (e) => {
@@ -1028,26 +1028,26 @@ export class CalendarOutlineView extends ItemView {
 		if (data.total === 0) {
 			body.createDiv({
 				text: `No range records for #${data.tag} this year.`,
-				cls: 'sfc-empty',
+				cls: 'calendar-ledger-empty',
 			});
 			return;
 		}
 
 		for (const item of data.items) {
-			const row = body.createDiv({ cls: 'sfc-range-row' });
-			const dateCol = row.createDiv({ cls: 'sfc-range-date' });
+			const row = body.createDiv({ cls: 'calendar-ledger-range-row' });
+			const dateCol = row.createDiv({ cls: 'calendar-ledger-range-date' });
 			dateCol.createSpan({
 				text: `${item.startDate.slice(5)}~${item.endDate.slice(5)}`,
 			});
-			const barCol = row.createDiv({ cls: 'sfc-range-bar-col' });
-			const bar = barCol.createDiv({ cls: 'sfc-range-bar' });
+			const barCol = row.createDiv({ cls: 'calendar-ledger-range-bar-col' });
+			const bar = barCol.createDiv({ cls: 'calendar-ledger-range-bar' });
 			// 条长严格按 duration 占该组 maxDuration 的比例
 			const widthPct = data.maxDuration > 0
 				? (item.duration / data.maxDuration) * 100
 				: 100;
 			bar.style.width = `${widthPct}%`;
-			bar.createSpan({ text: item.name, cls: 'sfc-range-place' });
-			row.createSpan({ text: `${item.duration}d`, cls: 'sfc-range-duration' });
+			bar.createSpan({ text: item.name, cls: 'calendar-ledger-range-place' });
+			row.createSpan({ text: `${item.duration}d`, cls: 'calendar-ledger-range-duration' });
 
 			const line = item.lineStart;
 			const title = item.title;
@@ -1071,9 +1071,9 @@ export class CalendarOutlineView extends ItemView {
 			this.yearSummaryYear = years[0] ?? new Date().getFullYear();
 		}
 
-		const subtoolbar = container.createDiv({ cls: 'sfc-subtoolbar sfc-year-toolbar' });
-		subtoolbar.createSpan({ text: 'Year', cls: 'sfc-year-label' });
-		const select = subtoolbar.createEl('select', { cls: 'sfc-year-select' });
+		const subtoolbar = container.createDiv({ cls: 'calendar-ledger-subtoolbar calendar-ledger-year-toolbar' });
+		subtoolbar.createSpan({ text: 'Year', cls: 'calendar-ledger-year-label' });
+		const select = subtoolbar.createEl('select', { cls: 'calendar-ledger-year-select' });
 		for (const y of years) {
 			const opt = select.createEl('option', { text: String(y), value: String(y) });
 			if (y === this.yearSummaryYear) opt.selected = true;
@@ -1087,7 +1087,7 @@ export class CalendarOutlineView extends ItemView {
 		const yearBlocks = blocks.filter((b) => b.date.startsWith(String(year)));
 
 		if (yearBlocks.filter((b) => b.hasContent).length === 0) {
-			container.createDiv({ text: `No content in ${year}.`, cls: 'sfc-empty' });
+			container.createDiv({ text: `No content in ${year}.`, cls: 'calendar-ledger-empty' });
 			return;
 		}
 
@@ -1097,9 +1097,9 @@ export class CalendarOutlineView extends ItemView {
 	}
 
 	private createYearSection(container: HTMLElement, title: string): HTMLElement {
-		const section = container.createDiv({ cls: 'sfc-year-section' });
-		section.createDiv({ text: title, cls: 'sfc-year-section-title' });
-		return section.createDiv({ cls: 'sfc-year-section-body' });
+		const section = container.createDiv({ cls: 'calendar-ledger-year-section' });
+		section.createDiv({ text: title, cls: 'calendar-ledger-year-section-title' });
+		return section.createDiv({ cls: 'calendar-ledger-year-section-body' });
 	}
 
 	private renderYearSummaryCards(container: HTMLElement, yearBlocks: CalendarDayBlock[], year: number): void {
@@ -1139,15 +1139,15 @@ export class CalendarOutlineView extends ItemView {
 		}
 
 		if (cardData.length === 0) {
-			body.createDiv({ text: 'No cards enabled. Enable cards in Settings.', cls: 'sfc-empty' });
+			body.createDiv({ text: 'No cards enabled. Enable cards in Settings.', cls: 'calendar-ledger-empty' });
 			return;
 		}
 
-		const cardsEl = body.createDiv({ cls: 'sfc-year-cards' });
+		const cardsEl = body.createDiv({ cls: 'calendar-ledger-year-cards' });
 		for (const c of cardData) {
-			const card = cardsEl.createDiv({ cls: 'sfc-year-card' });
-			card.createDiv({ text: c.value, cls: 'sfc-year-card-value' });
-			card.createDiv({ text: c.label, cls: 'sfc-year-card-label' });
+			const card = cardsEl.createDiv({ cls: 'calendar-ledger-year-card' });
+			card.createDiv({ text: c.value, cls: 'calendar-ledger-year-card-value' });
+			card.createDiv({ text: c.label, cls: 'calendar-ledger-year-card-label' });
 		}
 	}
 
@@ -1223,7 +1223,7 @@ export class CalendarOutlineView extends ItemView {
 		}
 
 		if (events.length === 0) {
-			body.createDiv({ text: 'No events.', cls: 'sfc-empty' });
+			body.createDiv({ text: 'No events.', cls: 'calendar-ledger-empty' });
 			return;
 		}
 
@@ -1235,16 +1235,16 @@ export class CalendarOutlineView extends ItemView {
 		}
 		const monthKeys = Array.from(byMonth.keys()).sort((a, b) => a.localeCompare(b));
 
-		const timeline = body.createDiv({ cls: 'sfc-year-timeline' });
+		const timeline = body.createDiv({ cls: 'calendar-ledger-year-timeline' });
 		for (const mk of monthKeys) {
 			const evs = byMonth.get(mk)!.sort((a, b) => a.sortDate.localeCompare(b.sortDate));
-			const monthBlock = timeline.createDiv({ cls: 'sfc-year-month' });
-			monthBlock.createDiv({ text: monthAbbr(mk), cls: 'sfc-year-month-title' });
+			const monthBlock = timeline.createDiv({ cls: 'calendar-ledger-year-month' });
+			monthBlock.createDiv({ text: monthAbbr(mk), cls: 'calendar-ledger-year-month-title' });
 			for (const ev of evs) {
-				const row = monthBlock.createDiv({ cls: 'sfc-year-event' });
-				row.createSpan({ text: ev.dateLabel, cls: 'sfc-year-event-date' });
-				row.createSpan({ text: ev.tagLabel, cls: 'sfc-year-event-tag' });
-				row.createSpan({ text: ev.text, cls: 'sfc-year-event-text' });
+				const row = monthBlock.createDiv({ cls: 'calendar-ledger-year-event' });
+				row.createSpan({ text: ev.dateLabel, cls: 'calendar-ledger-year-event-date' });
+				row.createSpan({ text: ev.tagLabel, cls: 'calendar-ledger-year-event-tag' });
+				row.createSpan({ text: ev.text, cls: 'calendar-ledger-year-event-text' });
 				row.addEventListener('click', (e) => {
 					e.stopPropagation();
 					this.selectRow(row);
@@ -1263,10 +1263,10 @@ export class CalendarOutlineView extends ItemView {
 		const summaryColumns = this.getEnabledExistingTags(tagMap, enabledTags);
 		const monthlyItems = computeMonthlySummary(yearBlocks, summaryColumns);
 		if (monthlyItems.length === 0 || summaryColumns.length === 0) {
-			body.createDiv({ text: 'No summary data.', cls: 'sfc-empty' });
+			body.createDiv({ text: 'No summary data.', cls: 'calendar-ledger-empty' });
 		} else {
-			const tableWrap = body.createDiv({ cls: 'sfc-table-scroll' });
-			const table = tableWrap.createEl('table', { cls: 'sfc-stats-table sfc-year-overview-table' });
+			const tableWrap = body.createDiv({ cls: 'calendar-ledger-table-scroll' });
+			const table = tableWrap.createEl('table', { cls: 'calendar-ledger-stats-table calendar-ledger-year-overview-table' });
 			const thead = table.createEl('thead');
 			const headRow = thead.createEl('tr');
 			headRow.createEl('th', { text: 'Month' });
@@ -1295,9 +1295,9 @@ export class CalendarOutlineView extends ItemView {
 			.filter(([tag, m]) => m.vizType === 'range' && enabledTags.has(tag))
 			.map(([tag, m]) => ({ tag, displayName: m.displayName ?? tag }));
 		if (rangeMappings.length > 0) {
-			body.createDiv({ text: 'Range Events', cls: 'sfc-year-subtitle' });
-			const rtableWrap = body.createDiv({ cls: 'sfc-table-scroll' });
-			const rtable = rtableWrap.createEl('table', { cls: 'sfc-stats-table sfc-year-overview-table' });
+			body.createDiv({ text: 'Range Events', cls: 'calendar-ledger-year-subtitle' });
+			const rtableWrap = body.createDiv({ cls: 'calendar-ledger-table-scroll' });
+			const rtable = rtableWrap.createEl('table', { cls: 'calendar-ledger-stats-table calendar-ledger-year-overview-table' });
 			const rthead = rtable.createEl('thead');
 			const rheadRow = rthead.createEl('tr');
 			rheadRow.createEl('th', { text: 'Tag' });
@@ -1324,11 +1324,11 @@ export class CalendarOutlineView extends ItemView {
 		tagTotals.sort((a, b) => b.count - a.count);
 
 		if (tagTotals.length > 0) {
-			const list = body.createDiv({ cls: 'sfc-year-tag-totals' });
+			const list = body.createDiv({ cls: 'calendar-ledger-year-tag-totals' });
 			for (const t of tagTotals) {
-				const item = list.createDiv({ cls: 'sfc-year-tag-total' });
-				item.createSpan({ text: `#${t.tag}`, cls: 'sfc-year-tag-total-name' });
-				item.createSpan({ text: String(t.count), cls: 'sfc-year-tag-total-count' });
+				const item = list.createDiv({ cls: 'calendar-ledger-year-tag-total' });
+				item.createSpan({ text: `#${t.tag}`, cls: 'calendar-ledger-year-tag-total-name' });
+				item.createSpan({ text: String(t.count), cls: 'calendar-ledger-year-tag-total-count' });
 			}
 		}
 	}

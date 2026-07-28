@@ -2,7 +2,7 @@ import { Notice, type Vault } from 'obsidian';
 import { parseCalendar } from './calendar-parser';
 import { generateCalendarMarkdown } from './calendar-generator';
 import { INLINE_SEPARATOR, migrateCalendarContent } from './calendar-migration';
-import type { SingleFileCalendarSettings } from './types';
+import type { CalendarLedgerSettings } from './types';
 
 /**
  * 创建或覆盖 Calendar.md 文件
@@ -173,7 +173,7 @@ export async function migrateToLatestFormat(
 export async function restructureCalendar(
 	vault: Vault,
 	filePath: string,
-	settings: SingleFileCalendarSettings,
+	settings: CalendarLedgerSettings,
 ): Promise<boolean> {
 	const file = vault.getFileByPath(filePath);
 	if (!file) {
@@ -185,7 +185,7 @@ export async function restructureCalendar(
 	const existingYears = Object.keys(dayBlockMap)
 		.map((dateStr) => Number(dateStr.slice(0, 4)))
 		.filter((year) => !isNaN(year));
-	const safeSettings: SingleFileCalendarSettings = {
+	const safeSettings: CalendarLedgerSettings = {
 		...settings,
 		startYear: existingYears.length > 0
 			? Math.min(settings.startYear, ...existingYears)

@@ -1,5 +1,5 @@
 import { generateDateRange, formatDate, getWeekNumber, getWeekdayName, getMonthAbbr } from './date-utils';
-import type { SingleFileCalendarSettings } from './types';
+import type { CalendarLedgerSettings } from './types';
 
 interface DateGroup {
 	year: number;
@@ -25,7 +25,7 @@ interface DateGroup {
  *                   用于在保留内容的前提下重建结构。
  */
 export function generateCalendarMarkdown(
-	settings: SingleFileCalendarSettings,
+	settings: CalendarLedgerSettings,
 	getContent?: (dateStr: string) => string[] | undefined,
 ): string {
 	const dates = generateDateRange(settings.startYear, settings.endYear);
@@ -92,7 +92,7 @@ function pushBlankIfNeeded(lines: string[]): void {
 /**
  * 将日期按 year/month/week 分组
  */
-function groupDates(dates: Date[], settings: SingleFileCalendarSettings): DateGroup[] {
+function groupDates(dates: Date[], settings: CalendarLedgerSettings): DateGroup[] {
 	return dates.map((date) => {
 		const weekNum = getWeekNumber(date);
 		const weekLabel = `W${String(weekNum).padStart(2, '0')}`;
@@ -113,7 +113,7 @@ function groupDates(dates: Date[], settings: SingleFileCalendarSettings): DateGr
  */
 export function generateYearMarkdown(
 	year: number,
-	settings: SingleFileCalendarSettings,
+	settings: CalendarLedgerSettings,
 	getContent?: (dateStr: string) => string[] | undefined,
 ): string {
 	const dates: Date[] = [];

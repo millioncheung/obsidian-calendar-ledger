@@ -38,7 +38,7 @@ export interface SidebarUiState {
 	collapsibleSections: Record<string, boolean>;
 }
 
-export interface SingleFileCalendarSettings {
+export interface CalendarLedgerSettings {
 	calendarFilePath: string;
 	startYear: number;
 	endYear: number;
@@ -51,7 +51,7 @@ export interface SingleFileCalendarSettings {
 	sidebarUiState: SidebarUiState;
 }
 
-export const DEFAULT_SETTINGS: SingleFileCalendarSettings = {
+export const DEFAULT_SETTINGS: CalendarLedgerSettings = {
 	calendarFilePath: 'Calendar.md',
 	startYear: new Date().getFullYear(),
 	endYear: new Date().getFullYear() + 2,

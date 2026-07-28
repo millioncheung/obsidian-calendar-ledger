@@ -19,7 +19,10 @@ export function migrateCalendarContent(content: string): CalendarMigrationResult
 		const match = originalLine.match(ANY_DAY_LINE_REGEX);
 		if (match?.[1] === undefined) continue;
 		let tail = (match[2] ?? '').trim();
-		tail = tail.replace(/^(?:[|｜]|[-*+]\s*)+/, '').trim();
+		// Remove the date/content delimiter from the record payload. Consume
+		// whitespace after every delimiter so previously accumulated forms such
+		// as `｜ ｜ ｜ #fitness` are repaired in a single migration.
+		tail = tail.replace(/^(?:[|｜]\s*|[-*+]\s*)+/, '').trim();
 		const normalizedLine = `- **${match[1].trim()}**${tail ? INLINE_SEPARATOR + tail : ''}`;
 		if (normalizedLine !== originalLine) {
 			lines[i] = normalizedLine;
