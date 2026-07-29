@@ -1,10 +1,9 @@
 {
-	"id": "calendar-ledger",
-	"name": "Calendar Ledger",
-	"version": "1.0.0",
-	"minAppVersion": "1.7.2",
-	"description": "Manage a continuous multi-year calendar, records, tags, date ranges, and statistics in one Markdown file.",
-	"author": "millioncheung",
-	"authorUrl": "https://github.com/millioncheung",
-	"isDesktopOnly": false
+  "id": "calendar-ledger",
+  "name": "Calendar Ledger",
+  "version": "1.0.0",
+  "minAppVersion": "1.7.2",
+  "description": "Manage dates, records, ranges, tags, and statistics in one Markdown file.",
+  "author": "millioncheung",
+  "isDesktopOnly": false
 }
